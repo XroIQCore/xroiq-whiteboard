@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type WhiteboardCounts = {
   filesNew: number;
   candidateMoments: number;
+  topPriorityMoments: number;
   reviewQueue: number;
   duplicateGroups: number;
 };

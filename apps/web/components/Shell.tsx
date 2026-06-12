@@ -13,6 +13,8 @@ export function Shell({ children }: { children: ReactNode }) {
           <nav className="flex items-center gap-4 text-sm text-slate-300">
             <a className="text-slate-300" href="/upload">Upload</a>
             <a className="text-slate-300" href="/review">Review</a>
+            <a className="text-slate-300" href="/priority">Priority</a>
+            <a className="text-slate-300" href="/arcs">Arcs</a>
             <button
               className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
               onClick={() => supabase.auth.signOut()}

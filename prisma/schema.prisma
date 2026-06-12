@@ -64,6 +64,7 @@ model Moment {
   updatedAt   DateTime @updatedAt
 
   evidence    MomentEvidence[]
+  priority    Priority?
 
   @@index([owner, intention])
   @@index([threadId])
@@ -127,4 +128,45 @@ model AuditLog {
   @@map("audit_log")
   @@index([event])
   @@index([createdAt])
+}
+
+model Priority {
+  id        String   @id @default(cuid())
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  momentId  String   @unique
+  rank      Int
+  bucket    String
+  reason    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("priorities")
+  @@index([bucket, rank])
+}
+
+model Arc {
+  id         String      @id @default(cuid())
+  owner      String
+  title      String
+  summary    String
+  confidence Float
+  status     String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  threads    ArcThread[]
+
+  @@map("arcs")
+  @@index([owner, status])
+}
+
+model ArcThread {
+  id        String   @id @default(cuid())
+  arc       Arc      @relation(fields: [arcId], references: [id], onDelete: Cascade)
+  arcId     String
+  threadId  String
+  createdAt DateTime @default(now())
+
+  @@map("arc_thread")
+  @@unique([arcId, threadId])
+  @@index([threadId])
 }

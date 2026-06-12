@@ -22,6 +22,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     data: { status: action },
   });
 
+  if (item.objectType === "Moment") {
+    await prisma.moment.update({
+      where: { id: item.objectId },
+      data: {
+        state: action === "approve" ? "approved" : action === "reject" ? "rejected" : "archived",
+        consent: action,
+      },
+    });
+  }
+
   await writeAuditLog({
     actor: null,
     event: item.objectType === "Moment" && action === "approve" ? "moment-approved" : `review-${action}`,
