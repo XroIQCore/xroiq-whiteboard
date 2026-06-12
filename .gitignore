@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# builds and caches
+dist/
+coverage/
+.cache/
+
+# environment and local secrets
+.env
+.env.*
+!.env.local.example
+
+# Supabase local runtime artifacts
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# local databases
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# local uploads and generated runtime data
+data/files/
+logs/
+*.log
+dev-server.*.log
+
+# local/editor files
+.devcontainer/
+.DS_Store
+Thumbs.db
+
+# local scratch files from smoke tests
+a.txt
+b.txt

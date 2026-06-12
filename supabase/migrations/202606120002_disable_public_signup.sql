@@ -1,0 +1,3 @@
+-- Disable public email sign-ups.
+-- Supabase owns auth.users internally, so project migrations cannot alter it.
+-- Public sign-up is disabled in supabase/config.toml instead.

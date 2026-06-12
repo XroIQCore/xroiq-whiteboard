@@ -1,0 +1,58 @@
+{
+  "name": "xroiq-whiteboard",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.5.3",
+  "resolutions": {
+    "@supabase/auth-helpers-nextjs": "0.9.0",
+    "@supabase/auth-helpers-react": "0.4.0"
+  },
+  "scripts": {
+    "dev": "next dev apps/web -p 3000",
+    "build": "next build apps/web",
+    "start": "next start apps/web -p 3000",
+    "supabase:start": "supabase start",
+    "worker": "tsx workers/$npm_config_worker/index.ts",
+    "worker:*": "tsx workers/$npm_config_worker/index.ts",
+    "worker:ingest": "tsx workers/ingestion/index.ts",
+    "worker:ingestion": "tsx workers/ingestion/index.ts",
+    "worker:signal": "tsx workers/signal/index.ts",
+    "worker:moment": "tsx workers/moment/index.ts",
+    "worker:dedupe": "tsx workers/dedupe/index.ts",
+    "worker:thread": "tsx workers/thread/index.ts",
+    "dev:workers": "concurrently -k \"pnpm worker --worker=ingestion\" \"pnpm worker --worker=signal\" \"pnpm worker --worker=moment\" \"pnpm worker --worker=dedupe\" \"pnpm worker --worker=thread\"",
+    "prisma:migrate": "prisma migrate dev --name init"
+  },
+  "dependencies": {
+    "@prisma/client": "5.9.0",
+    "@supabase/auth-helpers-react": "0.4.0",
+    "@supabase/supabase-js": "^2.108.1",
+    "adm-zip": "^0.5.17",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "formidable": "3.5.4",
+    "lucide-react": "^1.17.0",
+    "next": "14.2.0",
+    "openai": "4.0.0",
+    "pdf-parse": "1.1.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "swr": "2.4.1",
+    "tailwind-merge": "^3.6.0",
+    "zustand": "4.4.1"
+  },
+  "devDependencies": {
+    "@supabase/auth-helpers-nextjs": "0.9.0",
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^20.19.43",
+    "@types/react": "19.2.17",
+    "autoprefixer": "10.5.0",
+    "concurrently": "10.0.3",
+    "postcss": "8.5.15",
+    "prisma": "5.9.0",
+    "tailwindcss": "3.4.19",
+    "ts-node": "10.9.2",
+    "tsx": "4.22.4",
+    "typescript": "5.5.2"
+  }
+}

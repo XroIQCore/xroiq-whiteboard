@@ -1,0 +1,32 @@
+services:
+  supabase:
+    image: supabase/cli:latest
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["supabase", "start"]
+
+  web:
+    image: node:20-alpine
+    working_dir: /workspace
+    depends_on:
+      - supabase
+    env_file:
+      - .env.local
+    volumes:
+      - .:/workspace
+    command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev"]
+    ports:
+      - "3000:3000"
+
+  workers:
+    image: node:20-alpine
+    working_dir: /workspace
+    depends_on:
+      - supabase
+    env_file:
+      - .env.local
+    volumes:
+      - .:/workspace
+    command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev:workers"]

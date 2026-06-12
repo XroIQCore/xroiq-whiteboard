@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-950 text-white;
+}
+
+a {
+  @apply text-white underline-offset-4 hover:underline;
+}

@@ -1,0 +1,130 @@
+
+datasource db {
+  provider     = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model File {
+  id          String   @id @default(cuid())
+  owner       String   @default("unassigned")
+  name        String
+  type        String
+  size        Int
+  hash        String
+  storagePath String
+  status      String
+  createdAt   DateTime @default(now())
+
+  ExtractedContent ExtractedContent[]
+  evidences        MomentEvidence[]
+}
+
+model ExtractedContent {
+  id         String  @id @default(cuid())
+  file       File    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId     String
+  content    String
+  storagePath String?
+  confidence Float
+  createdAt  DateTime @default(now())
+
+  signals    Signal[]
+}
+
+model Signal {
+  id          String   @id @default(cuid())
+  extractedContent ExtractedContent @relation(fields: [extractedContentId], references: [id], onDelete: Cascade)
+  extractedContentId String
+  content     String
+  confidence  Float
+  status      String
+  createdAt   DateTime @default(now())
+
+  MomentEvidence MomentEvidence[]
+}
+
+model Moment {
+  id          String   @id @default(cuid())
+  owner       String   @default("unassigned")
+  threadId    String?
+  title       String?
+  context     String
+  intention   String?
+  need        String?
+  state       String
+  consent     String
+  outcome     String?
+  confidence  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  evidence    MomentEvidence[]
+
+  @@index([owner, intention])
+  @@index([threadId])
+}
+
+model MomentEvidence {
+  id        String  @id @default(cuid())
+  moment    Moment  @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  momentId  String
+
+  signal    Signal  @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  signalId  String
+
+  file      File?   @relation(fields: [fileId], references: [id])
+  fileId    String?
+}
+
+model ReviewQueue {
+  id         String   @id @default(cuid())
+  objectType String
+  objectId   String
+  reason     String
+  status     String
+  createdAt  DateTime @default(now())
+}
+
+model DuplicateGroup {
+  id         String   @id @default(cuid())
+  confidence Float
+  createdAt  DateTime @default(now())
+
+  items      DuplicateItem[]
+}
+
+model DuplicateItem {
+  id        String   @id @default(cuid())
+  group     DuplicateGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  objectType String
+  objectId  String
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  role      String   @default("operator")
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      String?
+  event      String
+  objectType String
+  objectId   String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_log")
+  @@index([event])
+  @@index([createdAt])
+}
