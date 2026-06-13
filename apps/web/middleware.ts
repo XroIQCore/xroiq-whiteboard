@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-const protectedPrefixes = ["/", "/upload", "/review", "/moments"];
+const protectedPrefixes = ["/", "/upload", "/review", "/moments", "/priority", "/arcs"];
 const publicPrefixes = ["/login", "/signup", "/api", "/_next", "/favicon.ico"];
 
 export async function middleware(req: NextRequest) {
@@ -25,5 +25,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/upload", "/review/:path*", "/moments/:path*"],
+  matcher: ["/", "/upload", "/review/:path*", "/moments/:path*", "/priority/:path*", "/arcs/:path*"],
 };

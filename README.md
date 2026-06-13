@@ -46,6 +46,8 @@ Production-intended dashboard for turning uploaded files into extracted content,
    - Dashboard: http://localhost:3000
    - Upload: http://localhost:3000/upload
    - Review: http://localhost:3000/review
+   - Priority Board: http://localhost:3000/priority
+   - Arc Explorer: http://localhost:3000/arcs
 
 Original files are stored in Supabase Storage bucket `whiteboard-originals`; extracted text is stored in `whiteboard-extracted-text`. If `OPENAI_API_KEY` is blank, moment generation uses a local stub response.
 
@@ -67,3 +69,12 @@ docker compose -f docker-compose.dev.yml up
 
 Public sign-up is disabled. The whitelist migration allows `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`.
 Local public sign-up is disabled by `supabase/config.toml`; invite Jess and Karne manually before first use.
+
+## Phase-4 workers
+
+```powershell
+pnpm worker:priority
+pnpm worker:arc
+```
+
+`pnpm dev:workers` starts the full ingestion, signal, moment, dedupe, thread, priority, and arc worker set.

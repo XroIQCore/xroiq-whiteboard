@@ -6,7 +6,7 @@ import { useSupabase } from "../lib/SupabaseProvider";
 
 const cards: Array<{ key: keyof WhiteboardCounts; label: string }> = [
   { key: "filesNew", label: "Files New" },
-  { key: "candidateMoments", label: "Candidate Moments" },
+  { key: "topPriorityMoments", label: "Top Priority Moments" },
   { key: "reviewQueue", label: "Review Queue" },
   { key: "duplicateGroups", label: "Duplicates" },
 ];

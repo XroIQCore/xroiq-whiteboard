@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "./supabase";
 export const filesDir = path.join(process.cwd(), "data", "files");
 export const originalsBucket = "whiteboard-originals";
 export const extractedTextBucket = "whiteboard-extracted-text";
+export const exportsBucket = "whiteboard-exports";
 
 export async function ensureFilesDir() {
   await fs.promises.mkdir(filesDir, { recursive: true });
