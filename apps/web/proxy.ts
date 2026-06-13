@@ -5,7 +5,7 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 const protectedPrefixes = ["/", "/upload", "/review", "/moments", "/priority", "/arcs"];
 const publicPrefixes = ["/login", "/signup", "/api", "/_next", "/favicon.ico"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next();
   const pathname = req.nextUrl.pathname;
   const isPublic = publicPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
