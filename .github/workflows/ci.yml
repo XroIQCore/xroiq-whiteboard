@@ -23,6 +23,7 @@ jobs:
           node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check:auth
       - run: pnpm exec prisma generate
       - run: pnpm exec prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
       - run: pnpm build

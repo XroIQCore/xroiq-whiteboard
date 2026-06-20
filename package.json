@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev apps/web -p 3000",
     "build": "next build apps/web",
+    "check:auth": "node scripts/assert-invite-only-auth.js",
     "start": "next start apps/web -p 3000",
     "supabase:start": "supabase start",
     "worker": "tsx workers/$npm_config_worker/index.ts",
