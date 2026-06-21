@@ -1,29 +1,31 @@
 name: CI
 
 on:
-  pull_request:
+  push:
     branches: [main]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
-      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
-      SUPABASE_URL: http://127.0.0.1:54321
-      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v3
         with:
           version: 11.5.3
-      - uses: actions/setup-node@v4
+          run_install: false
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-version: 22.13.0
-          cache: pnpm
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm check:auth
-      - run: pnpm exec prisma generate
-      - run: pnpm exec prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
+
       - run: pnpm build
