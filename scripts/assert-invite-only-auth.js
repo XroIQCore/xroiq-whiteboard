@@ -43,8 +43,12 @@ assert(
 
 const loginPage = read("apps/web/pages/login.tsx");
 assert(
-  /supabase\.auth\.signInWithOtp\s*\(\s*\{[\s\S]*?options\s*:\s*\{[\s\S]*?shouldCreateUser\s*:\s*false[\s\S]*?\}/m.test(loginPage),
-  "Login magic links must call signInWithOtp with options.shouldCreateUser set to false.",
+  /supabase\.auth\.signInWithPassword\s*\(\s*\{[\s\S]*?email[\s\S]*?password[\s\S]*?\}/m.test(loginPage),
+  "Login must use email/password auth.",
+);
+assert(
+  !/supabase\.auth\.signInWithOtp/.test(loginPage) && !/magic link/i.test(loginPage),
+  "Login must not use magic links.",
 );
 
 const signupPage = read("apps/web/pages/signup.tsx");

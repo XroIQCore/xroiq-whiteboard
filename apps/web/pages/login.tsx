@@ -7,19 +7,17 @@ import { useSupabase } from "../lib/SupabaseProvider";
 export default function LoginPage() {
   const supabase = useSupabase();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setMessage("");
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: window.location.origin,
-        shouldCreateUser: false,
-      },
+      password,
     });
-    setMessage(error ? "Sign-ups disabled. Ask Jess or Karne for an invite." : "Magic link sent. Check your email.");
+    setMessage(error ? "Could not sign in. Check your email and password." : "Signed in.");
   }
 
   return (
@@ -31,7 +29,8 @@ export default function LoginPage() {
         <CardContent>
           <form className="space-y-4" onSubmit={submit}>
             <Input onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
-            <Button className="w-full" type="submit">Send magic link</Button>
+            <Input onChange={(event) => setPassword(event.target.value)} placeholder="Password" type="password" value={password} />
+            <Button className="w-full" type="submit">Sign in</Button>
           </form>
           {message ? <p className="mt-4 text-sm text-slate-300">{message}</p> : null}
           <a className="mt-4 block text-sm text-slate-300" href="/signup">Need access?</a>
