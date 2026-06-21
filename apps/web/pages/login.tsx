@@ -1,23 +1,25 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { Provider } from "@supabase/supabase-js";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
 import { useSupabase } from "../lib/SupabaseProvider";
+
+const oauthProvider = (process.env.NEXT_PUBLIC_SUPABASE_OAUTH_PROVIDER || "google") as Provider;
+const oauthProviderLabel = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_LABEL || "Google";
 
 export default function LoginPage() {
   const supabase = useSupabase();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setMessage("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  async function signIn() {
+    setMessage("Redirecting...");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: oauthProvider,
+      options: {
+        redirectTo: window.location.origin,
+      },
     });
-    setMessage(error ? "Could not sign in. Check your email and password." : "Signed in.");
+    if (error) setMessage("Could not start sign in. Check the OAuth provider settings.");
   }
 
   return (
@@ -27,11 +29,7 @@ export default function LoginPage() {
           <CardTitle>Sign in to XROIQ Whiteboard</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={submit}>
-            <Input onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
-            <Input onChange={(event) => setPassword(event.target.value)} placeholder="Password" type="password" value={password} />
-            <Button className="w-full" type="submit">Sign in</Button>
-          </form>
+          <Button className="w-full" onClick={signIn} type="button">Continue with {oauthProviderLabel}</Button>
           {message ? <p className="mt-4 text-sm text-slate-300">{message}</p> : null}
           <a className="mt-4 block text-sm text-slate-300" href="/signup">Need access?</a>
         </CardContent>

@@ -43,12 +43,12 @@ assert(
 
 const loginPage = read("apps/web/pages/login.tsx");
 assert(
-  /supabase\.auth\.signInWithPassword\s*\(\s*\{[\s\S]*?email[\s\S]*?password[\s\S]*?\}/m.test(loginPage),
-  "Login must use email/password auth.",
+  /supabase\.auth\.signInWithOAuth\s*\(\s*\{[\s\S]*?provider\s*:\s*oauthProvider[\s\S]*?redirectTo\s*:\s*window\.location\.origin[\s\S]*?\}/m.test(loginPage),
+  "Login must use OAuth auth.",
 );
 assert(
-  !/supabase\.auth\.signInWithOtp/.test(loginPage) && !/magic link/i.test(loginPage),
-  "Login must not use magic links.",
+  !/supabase\.auth\.(signInWithOtp|signInWithPassword)/.test(loginPage) && !/magic link|password/i.test(loginPage),
+  "Login must not use magic links or password auth.",
 );
 
 const signupPage = read("apps/web/pages/signup.tsx");
@@ -57,8 +57,8 @@ assert(
   "The signup route must remain an invite-only access notice.",
 );
 assert(
-  !/supabase\.auth\.(signUp|signInWithOtp)/.test(signupPage),
-  "The signup route must not create users or send magic links.",
+  !/supabase\.auth\.(signUp|signInWithOtp|signInWithPassword|signInWithOAuth)/.test(signupPage),
+  "The signup route must not create users or start auth flows.",
 );
 
 console.log("Invite-only auth guard passed.");
