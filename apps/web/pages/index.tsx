@@ -9,6 +9,8 @@ const cards: Array<{ key: keyof WhiteboardCounts; label: string }> = [
   { key: "topPriorityMoments", label: "Top Priority Moments" },
   { key: "reviewQueue", label: "Review Queue" },
   { key: "duplicateGroups", label: "Duplicates" },
+  { key: "memoryEntries", label: "Memory Entries" },
+  { key: "needsAttention", label: "Needs Attention" },
 ];
 
 export default function Home() {
@@ -36,7 +38,7 @@ export default function Home() {
 
       {error ? <p className="mb-4 text-sm text-rose-300">Summary unavailable.</p> : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <Card key={card.key}>
             <CardHeader>

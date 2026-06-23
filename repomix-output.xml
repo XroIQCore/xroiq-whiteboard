@@ -1,0 +1,3528 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.env.local.example
+.github/workflows/ci.yml
+.gitignore
+apps/web/components/Shell.tsx
+apps/web/components/ui/accordion.tsx
+apps/web/components/ui/button.tsx
+apps/web/components/ui/card.tsx
+apps/web/components/ui/input.tsx
+apps/web/components/ui/table.tsx
+apps/web/components/ui/tabs.tsx
+apps/web/lib/realtime.ts
+apps/web/lib/supabaseClient.ts
+apps/web/lib/SupabaseProvider.tsx
+apps/web/lib/utils.ts
+apps/web/next-env.d.ts
+apps/web/next.config.js
+apps/web/pages/_app.tsx
+apps/web/pages/api/arcs/[id].ts
+apps/web/pages/api/arcs/index.ts
+apps/web/pages/api/export.ts
+apps/web/pages/api/moments.ts
+apps/web/pages/api/priority/[momentId].ts
+apps/web/pages/api/priority/index.ts
+apps/web/pages/api/review.ts
+apps/web/pages/api/review/[id].ts
+apps/web/pages/api/summary.ts
+apps/web/pages/api/upload.ts
+apps/web/pages/arcs/index.tsx
+apps/web/pages/auth/callback.tsx
+apps/web/pages/index.tsx
+apps/web/pages/login.tsx
+apps/web/pages/moments.tsx
+apps/web/pages/priority.tsx
+apps/web/pages/review.tsx
+apps/web/pages/signup.tsx
+apps/web/pages/upload.tsx
+apps/web/proxy.ts
+apps/web/styles/globals.css
+apps/web/tailwind.config.js
+apps/web/tsconfig.json
+ARCHITECTURE.md
+docker-compose.dev.yml
+package.json
+packages/shared/libs/arc.ts
+packages/shared/libs/audit.ts
+packages/shared/libs/broadcast.ts
+packages/shared/libs/counts.ts
+packages/shared/libs/openai.ts
+packages/shared/libs/priority.ts
+packages/shared/libs/prisma.ts
+packages/shared/libs/storage.ts
+packages/shared/libs/supabase.ts
+pnpm-workspace.yaml
+postcss.config.js
+prisma/migrations/20260611225845_init/migration.sql
+prisma/migrations/migration_lock.toml
+prisma/schema.prisma
+README.md
+scripts/assert-invite-only-auth.js
+scripts/supabase-db-commit.ps1
+supabase/config.toml
+supabase/migrations/202606120001_phase3_cloud_release.sql
+supabase/migrations/202606120002_disable_public_signup.sql
+supabase/migrations/202606130001_phase4_priority_arc.sql
+supabase/migrations/202606130002_enable_rls_public_tables.sql
+tailwind.config.js
+workers/arc/index.ts
+workers/dedupe/index.ts
+workers/ingestion/index.ts
+workers/moment/index.ts
+workers/priority/index.ts
+workers/signal/index.ts
+workers/thread/index.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="apps/web/pages/auth/callback.tsx">
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useSupabase } from "../../lib/SupabaseProvider";
+
+function safeNext(value: string | string[] | undefined) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
+  return value;
+}
+
+export default function AuthCallbackPage() {
+  const router = useRouter();
+  const supabase = useSupabase();
+  const [message, setMessage] = useState("Signing you in...");
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const code = typeof router.query.code === "string" ? router.query.code : "";
+    if (!code) {
+      setMessage("Sign in could not finish. Please try again.");
+      return;
+    }
+
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setMessage("Sign in could not finish. Please try again.");
+        return;
+      }
+
+      router.replace(safeNext(router.query.next));
+    });
+  }, [router, supabase]);
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">
+      <p className="text-sm text-slate-300">{message}</p>
+    </main>
+  );
+}
+</file>
+
+<file path=".gitignore">
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# builds and caches
+dist/
+coverage/
+.cache/
+
+# environment and local secrets
+.env
+.env.*
+!.env.local.example
+
+# Supabase local runtime artifacts
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# local databases
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# local uploads and generated runtime data
+data/files/
+logs/
+*.log
+dev-server.*.log
+
+# local/editor files
+.devcontainer/
+.DS_Store
+Thumbs.db
+
+# local scratch files from smoke tests
+a.txt
+b.txt
+</file>
+
+<file path="apps/web/components/ui/accordion.tsx">
+import * as React from "react";
+import { cn } from "../../lib/utils";
+
+export function Accordion({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("divide-y divide-slate-800 rounded-lg border border-slate-800", className)} {...props} />;
+}
+
+export function AccordionItem({ className, ...props }: React.HTMLAttributes<HTMLDetailsElement>) {
+  return <details className={cn("group bg-slate-950", className)} {...props} />;
+}
+
+export function AccordionTrigger({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+  return <summary className={cn("cursor-pointer list-none px-4 py-4 font-medium text-white", className)} {...props} />;
+}
+
+export function AccordionContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("px-4 pb-4 text-sm text-slate-300", className)} {...props} />;
+}
+</file>
+
+<file path="apps/web/components/ui/button.tsx">
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "../../lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-white/30 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-white text-slate-950 hover:bg-slate-200",
+        secondary: "bg-slate-800 text-white hover:bg-slate-700",
+        destructive: "bg-rose-700 text-white hover:bg-rose-600",
+        outline: "border border-slate-600 bg-transparent text-white hover:bg-white/10",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-8 px-3",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+  ),
+);
+Button.displayName = "Button";
+</file>
+
+<file path="apps/web/components/ui/card.tsx">
+import * as React from "react";
+import { cn } from "../../lib/utils";
+
+export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("rounded-lg border border-slate-800 bg-slate-900 text-white shadow-sm", className)} {...props} />;
+}
+
+export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("p-5 pb-2", className)} {...props} />;
+}
+
+export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  return <h3 className={cn("text-sm font-medium text-slate-300", className)} {...props} />;
+}
+
+export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("p-5 pt-2", className)} {...props} />;
+}
+</file>
+
+<file path="apps/web/components/ui/input.tsx">
+import * as React from "react";
+import { cn } from "../../lib/utils";
+
+export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <input
+      className={cn(
+        "block w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white file:mr-4 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-950",
+        className,
+      )}
+      ref={ref}
+      {...props}
+    />
+  ),
+);
+Input.displayName = "Input";
+</file>
+
+<file path="apps/web/components/ui/table.tsx">
+import * as React from "react";
+import { cn } from "../../lib/utils";
+
+export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
+  return <table className={cn("w-full text-left text-sm", className)} {...props} />;
+}
+
+export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+  return <thead className={cn("bg-slate-900 text-xs uppercase tracking-wide text-slate-300", className)} {...props} />;
+}
+
+export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+  return <tbody className={cn("divide-y divide-slate-800", className)} {...props} />;
+}
+
+export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
+  return <tr className={cn("border-slate-800", className)} {...props} />;
+}
+
+export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
+  return <th className={cn("px-4 py-3 font-medium", className)} {...props} />;
+}
+
+export function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+  return <td className={cn("px-4 py-3", className)} {...props} />;
+}
+</file>
+
+<file path="apps/web/components/ui/tabs.tsx">
+import * as React from "react";
+import { cn } from "../../lib/utils";
+
+export function Tabs({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("space-y-4", className)} {...props} />;
+}
+
+export function TabsList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex flex-wrap gap-2", className)} {...props} />;
+}
+
+export function TabsTrigger({ className, active, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return (
+    <button
+      className={cn(
+        "rounded-md border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300",
+        active && "border-white bg-white text-slate-950",
+        className,
+      )}
+      type="button"
+      {...props}
+    />
+  );
+}
+
+export function TabsContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("space-y-3", className)} {...props} />;
+}
+</file>
+
+<file path="apps/web/lib/supabaseClient.ts">
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+
+export function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  return createPagesBrowserClient({
+    supabaseUrl: url,
+    supabaseKey: anonKey,
+  });
+}
+</file>
+
+<file path="apps/web/lib/SupabaseProvider.tsx">
+import { createContext, ReactNode, useContext, useState } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "./supabaseClient";
+
+const SupabaseContext = createContext<SupabaseClient | null>(null);
+
+export function SupabaseProvider({ children }: { children: ReactNode }) {
+  const [client] = useState(() => createClient());
+  return <SupabaseContext.Provider value={client}>{children}</SupabaseContext.Provider>;
+}
+
+export function useSupabase() {
+  const client = useContext(SupabaseContext);
+  if (!client) throw new Error("SupabaseProvider is missing");
+  return client;
+}
+</file>
+
+<file path="apps/web/lib/utils.ts">
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+</file>
+
+<file path="apps/web/pages/_app.tsx">
+import type { AppProps } from "next/app";
+import { SupabaseProvider } from "../lib/SupabaseProvider";
+import "../styles/globals.css";
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <SupabaseProvider>
+      <Component {...pageProps} />
+    </SupabaseProvider>
+  );
+}
+</file>
+
+<file path="apps/web/pages/api/arcs/[id].ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../../packages/shared/libs/prisma";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const id = Array.isArray(req.query.id) ? req.query.id[0] : req.query.id;
+  if (!id) return res.status(400).json({ error: "Expected arc id" });
+
+  const arc = await prisma.arc.findUnique({
+    where: { id },
+    include: { threads: true },
+  });
+  if (!arc) return res.status(404).json({ error: "Arc not found" });
+
+  const moments = await prisma.moment.findMany({
+    where: { threadId: { in: arc.threads.map((thread) => thread.threadId) } },
+    include: { priority: true },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return res.status(200).json({
+    ...arc,
+    threads: arc.threads.map((thread) => ({
+      ...thread,
+      moments: moments.filter((moment) => moment.threadId === thread.threadId),
+    })),
+  });
+}
+</file>
+
+<file path="apps/web/pages/api/arcs/index.ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../../packages/shared/libs/prisma";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const arcs = await prisma.arc.findMany({
+    include: { threads: true },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const result = await Promise.all(
+    arcs.map(async (arc) => {
+      const threadIds = arc.threads.map((thread) => thread.threadId);
+      const moments = await prisma.moment.count({ where: { threadId: { in: threadIds } } });
+      return { ...arc, threadCount: threadIds.length, momentCount: moments };
+    }),
+  );
+
+  return res.status(200).json(result);
+}
+</file>
+
+<file path="apps/web/pages/api/export.ts">
+import crypto from "crypto";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { Parser } from "json2csv";
+import { prisma } from "../../../../packages/shared/libs/prisma";
+import { exportsBucket, getSignedUrl, uploadFile } from "../../../../packages/shared/libs/storage";
+import { writeAuditLog } from "../../../../packages/shared/libs/audit";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const { type, format = "json", bucket, owner } = req.body || {};
+  if (!["moments", "arcs"].includes(type) || !["json", "csv"].includes(format)) {
+    return res.status(400).json({ error: "Expected type moments|arcs and format json|csv" });
+  }
+
+  const rows =
+    type === "moments"
+      ? await prisma.moment.findMany({
+          where: {
+            ...(owner ? { owner } : {}),
+            ...(bucket ? { priority: { bucket } } : {}),
+          },
+          include: { priority: true },
+          orderBy: { updatedAt: "desc" },
+        })
+      : await prisma.arc.findMany({
+          where: owner ? { owner } : {},
+          include: { threads: true },
+          orderBy: { updatedAt: "desc" },
+        });
+
+  const body = format === "csv" ? new Parser().parse(rows) : JSON.stringify(rows, null, 2);
+  const storagePath = `exports/${type}-${Date.now()}-${crypto.randomUUID()}.${format}`;
+  await uploadFile(Buffer.from(body, "utf8"), storagePath, exportsBucket, format === "csv" ? "text/csv" : "application/json");
+  const signedUrl = await getSignedUrl(storagePath, exportsBucket, 60 * 60 * 24);
+
+  await writeAuditLog({
+    event: "export-create",
+    objectType: "Export",
+    objectId: storagePath,
+    payload: { type, format, bucket, owner, rows: rows.length },
+  });
+
+  return res.status(200).json({ signedUrl, storagePath, rows: rows.length });
+}
+</file>
+
+<file path="apps/web/pages/api/moments.ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../packages/shared/libs/prisma";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const threadId = Array.isArray(req.query.threadId) ? req.query.threadId[0] : req.query.threadId;
+  const moments = await prisma.moment.findMany({
+    where: threadId ? { threadId } : {},
+    include: { priority: true },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  });
+
+  return res.status(200).json(moments);
+}
+</file>
+
+<file path="apps/web/pages/api/priority/[momentId].ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../../packages/shared/libs/prisma";
+import { writeAuditLog } from "../../../../../packages/shared/libs/audit";
+import { broadcastCounts, broadcastEvent } from "../../../../../packages/shared/libs/broadcast";
+
+const buckets = new Set(["immediate", "soon", "backlog", "archived"]);
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "PATCH") {
+    res.setHeader("Allow", "PATCH");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const momentId = Array.isArray(req.query.momentId) ? req.query.momentId[0] : req.query.momentId;
+  const { bucket, rank } = req.body || {};
+  if (!momentId || (bucket && !buckets.has(bucket))) {
+    return res.status(400).json({ error: "Expected a valid momentId and bucket" });
+  }
+
+  const current = await prisma.priority.findUnique({
+    where: { momentId },
+    include: { moment: true },
+  });
+  if (!current) return res.status(404).json({ error: "Priority not found" });
+
+  const targetBucket = bucket || current.bucket;
+  const targetRank = typeof rank === "number" ? rank : current.rank;
+
+  const siblings = await prisma.priority.findMany({
+    where: {
+      bucket: targetBucket,
+      momentId: { not: momentId },
+    },
+    orderBy: { rank: "asc" },
+  });
+  const ordered = [...siblings];
+  ordered.splice(Math.max(0, targetRank - 1), 0, current);
+
+  const updates = ordered.map((item, index) =>
+    prisma.priority.update({
+      where: { id: item.id },
+      data: {
+        bucket: targetBucket,
+        rank: index + 1,
+      },
+    }),
+  );
+  await prisma.$transaction(updates);
+
+  const priority = await prisma.priority.findUniqueOrThrow({
+    where: { momentId },
+    include: { moment: true },
+  });
+
+  await writeAuditLog({
+    actor: priority.moment.owner,
+    event: "priority-update",
+    objectType: "Priority",
+    objectId: priority.id,
+    payload: { momentId, bucket: priority.bucket, rank: priority.rank },
+  });
+  await broadcastEvent("priority_update", { momentId, bucket: priority.bucket });
+  await broadcastCounts();
+
+  return res.status(200).json(priority);
+}
+</file>
+
+<file path="apps/web/pages/api/priority/index.ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../../packages/shared/libs/prisma";
+
+const buckets = ["immediate", "soon", "backlog", "archived"];
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const priorities = await prisma.priority.findMany({
+    include: { moment: true },
+    orderBy: [{ bucket: "asc" }, { rank: "asc" }],
+  });
+
+  return res.status(200).json({
+    counts: Object.fromEntries(buckets.map((bucket) => [bucket, priorities.filter((item) => item.bucket === bucket).length])),
+    buckets: Object.fromEntries(buckets.map((bucket) => [bucket, priorities.filter((item) => item.bucket === bucket)])),
+  });
+}
+</file>
+
+<file path="apps/web/pages/api/review.ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../packages/shared/libs/prisma";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const items = await prisma.reviewQueue.findMany({
+    where: { status: "unreviewed" },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+  });
+
+  return res.status(200).json(items);
+}
+</file>
+
+<file path="apps/web/pages/api/summary.ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getWhiteboardCounts } from "../../../../packages/shared/libs/counts";
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  return res.status(200).json(await getWhiteboardCounts());
+}
+</file>
+
+<file path="apps/web/pages/api/upload.ts">
+import crypto from "crypto";
+import fs from "fs";
+import type { NextApiRequest, NextApiResponse } from "next";
+import formidable, { File as FormidableFile } from "formidable";
+import { prisma } from "../../../../packages/shared/libs/prisma";
+import { broadcastCounts } from "../../../../packages/shared/libs/broadcast";
+import { writeAuditLog } from "../../../../packages/shared/libs/audit";
+import { hashBuffer, safeOriginalName, uploadFile } from "../../../../packages/shared/libs/storage";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function parseForm(req: NextApiRequest) {
+  const form = formidable({ multiples: true, keepExtensions: true });
+  return new Promise<FormidableFile[]>((resolve, reject) => {
+    form.parse(req, (error, _fields, files) => {
+      if (error) return reject(error);
+      const raw = files.files;
+      const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      resolve(list);
+    });
+  });
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const owner = "authenticated";
+  const uploaded = await parseForm(req);
+  if (!uploaded.length) {
+    return res.status(400).json({ error: "No files uploaded" });
+  }
+
+  const rows = [];
+  for (const file of uploaded) {
+    const originalName = safeOriginalName(file.originalFilename || "upload");
+    const storagePath = `${owner}/${crypto.randomUUID()}_${originalName}`;
+    const buffer = await fs.promises.readFile(file.filepath);
+    await uploadFile(buffer, storagePath, "whiteboard-originals", file.mimetype || undefined);
+    const row = await prisma.file.create({
+      data: {
+        owner,
+        name: originalName,
+        type: file.mimetype || "application/octet-stream",
+        size: file.size,
+        hash: hashBuffer(buffer),
+        storagePath,
+        status: "new",
+      },
+    });
+    await writeAuditLog({
+      actor: owner,
+      event: "upload",
+      objectType: "File",
+      objectId: row.id,
+      payload: { name: originalName, storagePath },
+    });
+    rows.push(row);
+  }
+
+  await broadcastCounts();
+  return res.status(200).json({ files: rows });
+}
+</file>
+
+<file path="apps/web/pages/arcs/index.tsx">
+import useSWR from "swr";
+import { Shell } from "../../components/Shell";
+import { Button } from "../../components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion";
+
+type Arc = {
+  id: string;
+  title: string;
+  owner: string;
+  summary: string;
+  status: string;
+  updatedAt: string;
+  threadCount: number;
+  momentCount: number;
+  threads: Array<{ threadId: string }>;
+};
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function ArcsPage() {
+  const { data } = useSWR<Arc[]>("/api/arcs", fetcher);
+
+  async function exportArcs(format: "json" | "csv") {
+    const res = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "arcs", format }),
+    });
+    const json = await res.json();
+    if (json.signedUrl) window.open(json.signedUrl, "_blank");
+  }
+
+  return (
+    <Shell>
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">Arc Explorer</h1>
+          <p className="mt-2 text-sm text-slate-400">Narrative arcs stitched from related threads.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportArcs("csv")}>Export CSV</Button>
+          <Button variant="outline" onClick={() => exportArcs("json")}>Export JSON</Button>
+        </div>
+      </header>
+
+      <Accordion>
+        {(data || []).map((arc) => (
+          <AccordionItem key={arc.id}>
+            <AccordionTrigger>
+              <div className="flex flex-col gap-1">
+                <span>{arc.title}</span>
+                <span className="text-xs font-normal text-slate-400">
+                  {arc.owner} • {arc.threadCount} threads • {arc.momentCount} moments • {new Date(arc.updatedAt).toLocaleString()}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <p className="mb-4">{arc.summary}</p>
+              <div className="space-y-2">
+                {arc.threads.map((thread) => (
+                  <a className="block rounded-md border border-slate-800 p-3 text-white" href={`/moments?threadId=${encodeURIComponent(thread.threadId)}`} key={thread.threadId}>
+                    Thread {thread.threadId}
+                  </a>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+      {data?.length === 0 ? <p className="mt-4 text-sm text-slate-400">No arcs yet. Run the arc worker after approved threaded moments exist.</p> : null}
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/pages/moments.tsx">
+import { useRouter } from "next/router";
+import useSWR from "swr";
+import { Shell } from "../components/Shell";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+
+type Moment = {
+  id: string;
+  title?: string;
+  context: string;
+  need?: string;
+  confidence: number;
+  updatedAt: string;
+  priority?: { bucket: string; rank: number } | null;
+};
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function MomentsPage() {
+  const router = useRouter();
+  const threadId = typeof router.query.threadId === "string" ? router.query.threadId : "";
+  const { data } = useSWR<Moment[]>(threadId ? `/api/moments?threadId=${encodeURIComponent(threadId)}` : "/api/moments", fetcher);
+
+  return (
+    <Shell>
+      <header className="mb-8">
+        <h1 className="text-3xl font-semibold">Moments</h1>
+        <p className="mt-2 text-sm text-slate-400">{threadId ? `Thread ${threadId}` : "Recent moments"}</p>
+      </header>
+      <section className="space-y-3">
+        {(data || []).map((moment) => (
+          <Card key={moment.id}>
+            <CardHeader>
+              <CardTitle>{moment.title || "Untitled moment"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-300">{moment.need || moment.context}</p>
+              <p className="mt-3 text-xs text-slate-400">
+                Confidence {Math.round(moment.confidence * 100)}%
+                {moment.priority ? ` • ${moment.priority.bucket} #${moment.priority.rank}` : ""}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/pages/priority.tsx">
+import { useState } from "react";
+import useSWR from "swr";
+import { Shell } from "../components/Shell";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+
+const buckets = ["immediate", "soon", "backlog", "archived"] as const;
+type Bucket = (typeof buckets)[number];
+
+type PriorityItem = {
+  id: string;
+  momentId: string;
+  rank: number;
+  bucket: Bucket;
+  reason: string;
+  updatedAt: string;
+  moment: {
+    title?: string;
+    need?: string;
+    confidence: number;
+    updatedAt: string;
+  };
+};
+
+type PriorityResponse = {
+  buckets: Record<Bucket, PriorityItem[]>;
+};
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function PriorityPage() {
+  const { data, mutate } = useSWR<PriorityResponse>("/api/priority", fetcher);
+  const [active, setActive] = useState<Bucket>("immediate");
+  const [dragged, setDragged] = useState<string | null>(null);
+
+  async function move(momentId: string, bucket: Bucket, rank?: number) {
+    await fetch(`/api/priority/${momentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bucket, rank }),
+    });
+    mutate();
+  }
+
+  async function exportBucket(format: "json" | "csv") {
+    const res = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "moments", format, bucket: active }),
+    });
+    const json = await res.json();
+    if (json.signedUrl) window.open(json.signedUrl, "_blank");
+  }
+
+  const items = data?.buckets?.[active] || [];
+
+  return (
+    <Shell>
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">Priority Board</h1>
+          <p className="mt-2 text-sm text-slate-400">Approved moments ranked by urgency and impact.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportBucket("csv")}>Export CSV</Button>
+          <Button variant="outline" onClick={() => exportBucket("json")}>Export JSON</Button>
+        </div>
+      </header>
+
+      <Tabs>
+        <TabsList>
+          {buckets.map((bucket) => (
+            <TabsTrigger key={bucket} active={bucket === active} onClick={() => setActive(bucket)}>
+              {bucket[0].toUpperCase() + bucket.slice(1)} ({data?.buckets?.[bucket]?.length || 0})
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent>
+          {items.map((item, index) => (
+            <Card
+              draggable
+              key={item.id}
+              onDragStart={() => setDragged(item.momentId)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => dragged && move(dragged, active, index + 1)}
+            >
+              <CardHeader>
+                <CardTitle>{item.rank}. {item.moment.title || "Untitled moment"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-300">{item.moment.need || item.reason}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                  <span>Confidence {Math.round(item.moment.confidence * 100)}%</span>
+                  <span>Updated {new Date(item.updatedAt).toLocaleString()}</span>
+                  {buckets.filter((bucket) => bucket !== active).map((bucket) => (
+                    <button key={bucket} className="text-white underline-offset-4 hover:underline" onClick={() => move(item.momentId, bucket)}>
+                      Move to {bucket}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {!items.length ? <p className="rounded-lg border border-slate-800 p-6 text-sm text-slate-400">No moments in this bucket yet.</p> : null}
+        </TabsContent>
+      </Tabs>
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/pages/review.tsx">
+import useSWR from "swr";
+import { useEffect } from "react";
+import { Shell } from "../components/Shell";
+import { Button } from "../components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { subscribeToCounts } from "../lib/realtime";
+import { useSupabase } from "../lib/SupabaseProvider";
+
+type ReviewItem = {
+  id: string;
+  objectType: string;
+  objectId: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+};
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export default function ReviewPage() {
+  const supabase = useSupabase();
+  const { data, mutate, error } = useSWR<ReviewItem[]>("/api/review", fetcher, {
+    refreshInterval: 0,
+  });
+
+  useEffect(() => subscribeToCounts(supabase, () => mutate()), [mutate, supabase]);
+
+  async function act(id: string, action: "approve" | "reject") {
+    await fetch(`/api/review/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    mutate();
+  }
+
+  return (
+    <Shell>
+      <header className="mb-8">
+        <div>
+          <h1 className="text-3xl font-semibold">Review Queue</h1>
+          <p className="mt-2 text-sm text-slate-400">Approve or reject generated work items.</p>
+        </div>
+      </header>
+
+      {error ? <p className="mb-4 text-sm text-rose-300">Review queue unavailable.</p> : null}
+
+      <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Reason</TableHead>
+              <TableHead>Object</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(data || []).map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.reason}</TableCell>
+                <TableCell className="text-slate-300">{item.objectType}:{item.objectId}</TableCell>
+                <TableCell className="text-slate-300">{new Date(item.createdAt).toLocaleString()}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => act(item.id, "approve")}>
+                      Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => act(item.id, "reject")}>
+                      Reject
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {data?.length === 0 ? (
+              <TableRow>
+                <TableCell className="py-6 text-center text-slate-400" colSpan={4}>No unreviewed items.</TableCell>
+              </TableRow>
+            ) : null}
+          </TableBody>
+        </Table>
+      </div>
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/pages/signup.tsx">
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+
+export default function SignupPage() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign-ups disabled</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-300">
+            XROIQ Whiteboard is invite-only. Ask Jess or Karne to invite your email in Supabase.
+          </p>
+          <a className="mt-4 block text-sm text-slate-300" href="/login">Back to sign in</a>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
+</file>
+
+<file path="apps/web/pages/upload.tsx">
+import { FormEvent, useState } from "react";
+import { Shell } from "../components/Shell";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+
+export default function UploadPage() {
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function uploadFiles(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    const input = event.currentTarget.elements.namedItem("files") as HTMLInputElement;
+    if (!input.files?.length) {
+      setMessage("Choose one or more files first.");
+      return;
+    }
+
+    const form = new FormData();
+    Array.from(input.files).forEach((file) => form.append("files", file));
+    setBusy(true);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Upload failed");
+      setMessage(`Uploaded ${json.files.length} file(s). Workers will pick them up next.`);
+      input.value = "";
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Shell>
+      <header className="mb-8">
+        <div>
+          <h1 className="text-3xl font-semibold">Upload</h1>
+          <p className="mt-2 text-sm text-slate-400">Add source files to Supabase Storage and the extraction queue.</p>
+        </div>
+      </header>
+
+      <form onSubmit={uploadFiles} className="rounded-lg border border-dashed border-slate-700 bg-slate-900 p-8">
+        <Input
+          name="files"
+          type="file"
+          multiple
+        />
+        <Button
+          className="mt-5"
+          disabled={busy}
+          type="submit"
+        >
+          {busy ? "Uploading..." : "Upload files"}
+        </Button>
+      </form>
+
+      {message ? <p className="mt-4 text-sm text-slate-300">{message}</p> : null}
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/proxy.ts">
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+
+const protectedPrefixes = ["/", "/upload", "/review", "/moments", "/priority", "/arcs"];
+const publicPrefixes = ["/login", "/signup", "/api", "/_next", "/favicon.ico"];
+
+export async function proxy(req: NextRequest) {
+  const res = NextResponse.next();
+  const pathname = req.nextUrl.pathname;
+  const isPublic = publicPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  const isProtected = protectedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  if (isPublic || !isProtected) return res;
+
+  const supabase = createMiddlewareClient({ req, res });
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: ["/", "/upload", "/review/:path*", "/moments/:path*", "/priority/:path*", "/arcs/:path*"],
+};
+</file>
+
+<file path="apps/web/styles/globals.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-950 text-white;
+}
+
+a {
+  @apply text-white underline-offset-4 hover:underline;
+}
+</file>
+
+<file path="ARCHITECTURE.md">
+# XROIQ Whiteboard Architecture
+
+## Priority & Arc Logic
+
+Phase 4 adds a narrative layer on top of the Moment pipeline.
+
+The Priority worker reads approved Moments that do not yet have a `Priority` row. It scores each Moment from 0-100 using confidence, need, intention, state, and urgency/impact keywords. Scores above 80 go to `immediate`, scores from 60-80 go to `soon`, and lower scores go to `backlog`. Manual moves through `/api/priority/[momentId]` can change bucket or rank. Every worker-created or manually-updated priority writes an `audit_log` row and emits a realtime `priority_update` event.
+
+The Arc worker runs every five minutes. It groups approved threaded Moments by `owner` and overlapping context keywords, then asks the OpenAI helper to summarise related Threads as one narrative Arc. The output is stored in `arcs`, and the participating thread IDs are linked through `arc_thread`. If `OPENAI_API_KEY` is blank, the existing OpenAI stub keeps the worker deterministic for local development.
+
+The Priority Board at `/priority` shows buckets for Immediate, Soon, Backlog, and Archived. Cards can be dragged within the visible bucket to adjust rank, or moved across buckets with the card controls. The Arc Explorer at `/arcs` shows expandable Arcs with their Threads and links into `/moments?threadId=...`.
+
+Exports are handled by `/api/export`. The route supports filtered Moment exports and Arc exports in JSON or CSV, stores the generated file in the `whiteboard-exports` Supabase Storage bucket, and returns a one-day signed URL.
+</file>
+
+<file path="docker-compose.dev.yml">
+services:
+  supabase:
+    image: supabase/cli:latest
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["supabase", "start"]
+
+  web:
+    image: node:20-alpine
+    working_dir: /workspace
+    depends_on:
+      - supabase
+    env_file:
+      - .env.local
+    volumes:
+      - .:/workspace
+    command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev"]
+    ports:
+      - "3000:3000"
+
+  workers:
+    image: node:20-alpine
+    working_dir: /workspace
+    depends_on:
+      - supabase
+    env_file:
+      - .env.local
+    volumes:
+      - .:/workspace
+    command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev:workers"]
+</file>
+
+<file path="packages/shared/libs/arc.ts">
+export type ArcSummary = {
+  title?: string;
+  summary?: string;
+  confidence?: number;
+};
+
+export function keywordSet(text: string) {
+  const ignored = new Set(["the", "and", "for", "with", "that", "this", "from", "into", "need", "intent", "context"]);
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 4 && !ignored.has(word))
+      .slice(0, 20),
+  );
+}
+
+export function overlaps(a: Set<string>, b: Set<string>) {
+  for (const word of a) {
+    if (b.has(word)) return true;
+  }
+  return false;
+}
+
+export function parseArcSummary(raw: string): ArcSummary {
+  const trimmed = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "");
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return { title: "Untitled arc", summary: raw.slice(0, 1000), confidence: 0.5 };
+  }
+}
+</file>
+
+<file path="packages/shared/libs/audit.ts">
+import { prisma } from "./prisma";
+import { Prisma } from "@prisma/client";
+
+type AuditInput = {
+  actor?: string | null;
+  event: string;
+  objectType: string;
+  objectId?: string | null;
+  payload?: Prisma.InputJsonValue;
+};
+
+export async function writeAuditLog(input: AuditInput) {
+  return prisma.auditLog.create({
+    data: {
+      actor: input.actor || null,
+      event: input.event,
+      objectType: input.objectType,
+      objectId: input.objectId || null,
+      payload: input.payload || undefined,
+    },
+  });
+}
+</file>
+
+<file path="packages/shared/libs/openai.ts">
+import OpenAI from "openai";
+
+const key = process.env.OPENAI_API_KEY || "";
+
+export async function chatCompletion(prompt: string) {
+  if (!key) {
+    return '{"context":"","intention":"","need":"","title":"","confidence":0.5}';
+  }
+
+  const api = new OpenAI({ apiKey: key });
+  const res = await api.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 256,
+  });
+
+  return res.choices[0]?.message?.content ?? "";
+}
+</file>
+
+<file path="packages/shared/libs/priority.ts">
+import type { Moment } from "@prisma/client";
+
+export type PriorityBucket = "immediate" | "soon" | "backlog" | "archived";
+
+const urgentWords = ["blocked", "urgent", "risk", "deadline", "broken", "critical", "must", "now"];
+const impactWords = ["revenue", "customer", "client", "launch", "security", "trust", "retention", "team"];
+const backlogWords = ["nice", "later", "maybe", "someday", "explore", "optional"];
+
+function countMatches(text: string, words: string[]) {
+  return words.reduce((count, word) => count + (text.includes(word) ? 1 : 0), 0);
+}
+
+export function scoreMoment(moment: Moment) {
+  const text = [moment.title, moment.context, moment.intention, moment.need, moment.state, moment.outcome]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  let score = Math.round((moment.confidence || 0.5) * 35);
+  score += countMatches(text, urgentWords) * 14;
+  score += countMatches(text, impactWords) * 10;
+  score += moment.need ? 12 : 0;
+  score += moment.intention ? 8 : 0;
+  score += moment.state === "approved" ? 10 : 0;
+  score -= countMatches(text, backlogWords) * 10;
+  score = Math.max(0, Math.min(100, score));
+
+  const bucket: PriorityBucket = score > 80 ? "immediate" : score >= 60 ? "soon" : "backlog";
+  const reason = `Score ${score}: confidence, need, intention, state, and keyword signals.`;
+  return { score, bucket, reason };
+}
+</file>
+
+<file path="packages/shared/libs/prisma.ts">
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+</file>
+
+<file path="packages/shared/libs/supabase.ts">
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+export function getSupabaseAdmin() {
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for server storage/realtime");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+</file>
+
+<file path="prisma/migrations/20260611225845_init/migration.sql">
+-- CreateTable
+CREATE TABLE "File" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "hash" TEXT NOT NULL,
+    "storagePath" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "ExtractedContent" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "fileId" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "confidence" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ExtractedContent_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "File" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Signal" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "extractedContentId" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "confidence" REAL NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Signal_extractedContentId_fkey" FOREIGN KEY ("extractedContentId") REFERENCES "ExtractedContent" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Moment" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "title" TEXT,
+    "context" TEXT NOT NULL,
+    "intention" TEXT,
+    "need" TEXT,
+    "state" TEXT NOT NULL,
+    "consent" TEXT NOT NULL,
+    "outcome" TEXT,
+    "confidence" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "MomentEvidence" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "momentId" TEXT NOT NULL,
+    "signalId" TEXT NOT NULL,
+    "fileId" TEXT,
+    CONSTRAINT "MomentEvidence_momentId_fkey" FOREIGN KEY ("momentId") REFERENCES "Moment" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MomentEvidence_signalId_fkey" FOREIGN KEY ("signalId") REFERENCES "Signal" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MomentEvidence_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "File" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "ReviewQueue" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "objectType" TEXT NOT NULL,
+    "objectId" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "DuplicateGroup" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "confidence" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "DuplicateItem" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "groupId" TEXT NOT NULL,
+    "objectType" TEXT NOT NULL,
+    "objectId" TEXT NOT NULL,
+    CONSTRAINT "DuplicateItem_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "DuplicateGroup" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+</file>
+
+<file path="prisma/migrations/migration_lock.toml">
+# Please do not edit this file manually
+# It should be added in your version-control system (i.e. Git)
+provider = "sqlite"
+</file>
+
+<file path="scripts/supabase-db-commit.ps1">
+supabase db commit phase3_cloud_release
+</file>
+
+<file path="supabase/migrations/202606120001_phase3_cloud_release.sql">
+create table if not exists "File" (
+  id text primary key,
+  owner text not null default 'unassigned',
+  name text not null,
+  type text not null,
+  size integer not null,
+  hash text not null,
+  "storagePath" text not null,
+  status text not null,
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "ExtractedContent" (
+  id text primary key,
+  "fileId" text not null references "File"(id) on delete cascade,
+  content text not null,
+  "storagePath" text,
+  confidence double precision not null,
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "Signal" (
+  id text primary key,
+  "extractedContentId" text not null references "ExtractedContent"(id) on delete cascade,
+  content text not null,
+  confidence double precision not null,
+  status text not null,
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "Moment" (
+  id text primary key,
+  owner text not null default 'unassigned',
+  "threadId" text,
+  title text,
+  context text not null,
+  intention text,
+  need text,
+  state text not null,
+  consent text not null,
+  outcome text,
+  confidence double precision not null,
+  "createdAt" timestamptz not null default now(),
+  "updatedAt" timestamptz not null default now()
+);
+
+create table if not exists "MomentEvidence" (
+  id text primary key,
+  "momentId" text not null references "Moment"(id) on delete cascade,
+  "signalId" text not null references "Signal"(id) on delete cascade,
+  "fileId" text references "File"(id)
+);
+
+create table if not exists "ReviewQueue" (
+  id text primary key,
+  "objectType" text not null,
+  "objectId" text not null,
+  reason text not null,
+  status text not null,
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "DuplicateGroup" (
+  id text primary key,
+  confidence double precision not null,
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "DuplicateItem" (
+  id text primary key,
+  "groupId" text not null references "DuplicateGroup"(id) on delete cascade,
+  "objectType" text not null,
+  "objectId" text not null
+);
+
+create table if not exists users (
+  id text primary key,
+  email text not null unique,
+  role text not null default 'operator',
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists audit_log (
+  id text primary key,
+  actor text,
+  event text not null,
+  "objectType" text not null,
+  "objectId" text,
+  payload jsonb,
+  "createdAt" timestamptz not null default now()
+);
+
+create index if not exists "Moment_owner_intention_idx" on "Moment"(owner, intention);
+create index if not exists "Moment_threadId_idx" on "Moment"("threadId");
+create index if not exists "AuditLog_event_idx" on audit_log(event);
+create index if not exists "AuditLog_createdAt_idx" on audit_log("createdAt");
+
+insert into storage.buckets (id, name, public)
+values ('whiteboard-originals', 'whiteboard-originals', false)
+on conflict (id) do nothing;
+
+insert into storage.buckets (id, name, public)
+values ('whiteboard-extracted-text', 'whiteboard-extracted-text', false)
+on conflict (id) do nothing;
+</file>
+
+<file path="supabase/migrations/202606120002_disable_public_signup.sql">
+-- Disable public email sign-ups.
+-- Supabase owns auth.users internally, so project migrations cannot alter it.
+-- Public sign-up is disabled in supabase/config.toml instead.
+</file>
+
+<file path="supabase/migrations/202606130001_phase4_priority_arc.sql">
+create table if not exists priorities (
+  id text primary key,
+  "momentId" text not null unique references "Moment"(id) on delete cascade,
+  rank integer not null,
+  bucket text not null check (bucket in ('immediate', 'soon', 'backlog', 'archived')),
+  reason text not null,
+  "createdAt" timestamptz not null default now(),
+  "updatedAt" timestamptz not null default now()
+);
+
+create index if not exists "priorities_bucket_rank_idx" on priorities(bucket, rank);
+
+create table if not exists arcs (
+  id text primary key,
+  owner text not null,
+  title text not null,
+  summary text not null,
+  confidence double precision not null,
+  status text not null check (status in ('draft', 'approved', 'archived')),
+  "createdAt" timestamptz not null default now(),
+  "updatedAt" timestamptz not null default now()
+);
+
+create index if not exists "arcs_owner_status_idx" on arcs(owner, status);
+
+create table if not exists arc_thread (
+  id text primary key,
+  "arcId" text not null references arcs(id) on delete cascade,
+  "threadId" text not null,
+  "createdAt" timestamptz not null default now(),
+  unique ("arcId", "threadId")
+);
+
+create index if not exists "arc_thread_threadId_idx" on arc_thread("threadId");
+
+insert into storage.buckets (id, name, public)
+values ('whiteboard-exports', 'whiteboard-exports', false)
+on conflict (id) do nothing;
+</file>
+
+<file path="supabase/migrations/202606130002_enable_rls_public_tables.sql">
+alter table public."File" enable row level security;
+
+drop policy if exists "authenticated_select_File" on public."File";
+create policy "authenticated_select_File"
+on public."File"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_File" on public."File";
+create policy "authenticated_insert_File"
+on public."File"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_File" on public."File";
+create policy "authenticated_update_File"
+on public."File"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_File" on public."File";
+create policy "authenticated_delete_File"
+on public."File"
+for delete
+to authenticated
+using (true);
+
+alter table public."ExtractedContent" enable row level security;
+
+drop policy if exists "authenticated_select_ExtractedContent" on public."ExtractedContent";
+create policy "authenticated_select_ExtractedContent"
+on public."ExtractedContent"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_ExtractedContent" on public."ExtractedContent";
+create policy "authenticated_insert_ExtractedContent"
+on public."ExtractedContent"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_ExtractedContent" on public."ExtractedContent";
+create policy "authenticated_update_ExtractedContent"
+on public."ExtractedContent"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_ExtractedContent" on public."ExtractedContent";
+create policy "authenticated_delete_ExtractedContent"
+on public."ExtractedContent"
+for delete
+to authenticated
+using (true);
+
+alter table public."Signal" enable row level security;
+
+drop policy if exists "authenticated_select_Signal" on public."Signal";
+create policy "authenticated_select_Signal"
+on public."Signal"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_Signal" on public."Signal";
+create policy "authenticated_insert_Signal"
+on public."Signal"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_Signal" on public."Signal";
+create policy "authenticated_update_Signal"
+on public."Signal"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_Signal" on public."Signal";
+create policy "authenticated_delete_Signal"
+on public."Signal"
+for delete
+to authenticated
+using (true);
+
+alter table public."Moment" enable row level security;
+
+drop policy if exists "authenticated_select_Moment" on public."Moment";
+create policy "authenticated_select_Moment"
+on public."Moment"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_Moment" on public."Moment";
+create policy "authenticated_insert_Moment"
+on public."Moment"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_Moment" on public."Moment";
+create policy "authenticated_update_Moment"
+on public."Moment"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_Moment" on public."Moment";
+create policy "authenticated_delete_Moment"
+on public."Moment"
+for delete
+to authenticated
+using (true);
+
+alter table public."MomentEvidence" enable row level security;
+
+drop policy if exists "authenticated_select_MomentEvidence" on public."MomentEvidence";
+create policy "authenticated_select_MomentEvidence"
+on public."MomentEvidence"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_MomentEvidence" on public."MomentEvidence";
+create policy "authenticated_insert_MomentEvidence"
+on public."MomentEvidence"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_MomentEvidence" on public."MomentEvidence";
+create policy "authenticated_update_MomentEvidence"
+on public."MomentEvidence"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_MomentEvidence" on public."MomentEvidence";
+create policy "authenticated_delete_MomentEvidence"
+on public."MomentEvidence"
+for delete
+to authenticated
+using (true);
+
+alter table public."ReviewQueue" enable row level security;
+
+drop policy if exists "authenticated_select_ReviewQueue" on public."ReviewQueue";
+create policy "authenticated_select_ReviewQueue"
+on public."ReviewQueue"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_ReviewQueue" on public."ReviewQueue";
+create policy "authenticated_insert_ReviewQueue"
+on public."ReviewQueue"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_ReviewQueue" on public."ReviewQueue";
+create policy "authenticated_update_ReviewQueue"
+on public."ReviewQueue"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_ReviewQueue" on public."ReviewQueue";
+create policy "authenticated_delete_ReviewQueue"
+on public."ReviewQueue"
+for delete
+to authenticated
+using (true);
+
+alter table public."DuplicateGroup" enable row level security;
+
+drop policy if exists "authenticated_select_DuplicateGroup" on public."DuplicateGroup";
+create policy "authenticated_select_DuplicateGroup"
+on public."DuplicateGroup"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_DuplicateGroup" on public."DuplicateGroup";
+create policy "authenticated_insert_DuplicateGroup"
+on public."DuplicateGroup"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_DuplicateGroup" on public."DuplicateGroup";
+create policy "authenticated_update_DuplicateGroup"
+on public."DuplicateGroup"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_DuplicateGroup" on public."DuplicateGroup";
+create policy "authenticated_delete_DuplicateGroup"
+on public."DuplicateGroup"
+for delete
+to authenticated
+using (true);
+
+alter table public."DuplicateItem" enable row level security;
+
+drop policy if exists "authenticated_select_DuplicateItem" on public."DuplicateItem";
+create policy "authenticated_select_DuplicateItem"
+on public."DuplicateItem"
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_DuplicateItem" on public."DuplicateItem";
+create policy "authenticated_insert_DuplicateItem"
+on public."DuplicateItem"
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_DuplicateItem" on public."DuplicateItem";
+create policy "authenticated_update_DuplicateItem"
+on public."DuplicateItem"
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_DuplicateItem" on public."DuplicateItem";
+create policy "authenticated_delete_DuplicateItem"
+on public."DuplicateItem"
+for delete
+to authenticated
+using (true);
+
+alter table public.users enable row level security;
+
+drop policy if exists "authenticated_select_users" on public.users;
+create policy "authenticated_select_users"
+on public.users
+for select
+to authenticated
+using (true);
+
+alter table public.audit_log enable row level security;
+
+drop policy if exists "authenticated_select_audit_log" on public.audit_log;
+create policy "authenticated_select_audit_log"
+on public.audit_log
+for select
+to authenticated
+using (true);
+
+alter table public.priorities enable row level security;
+
+drop policy if exists "authenticated_select_priorities" on public.priorities;
+create policy "authenticated_select_priorities"
+on public.priorities
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_priorities" on public.priorities;
+create policy "authenticated_insert_priorities"
+on public.priorities
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_priorities" on public.priorities;
+create policy "authenticated_update_priorities"
+on public.priorities
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_priorities" on public.priorities;
+create policy "authenticated_delete_priorities"
+on public.priorities
+for delete
+to authenticated
+using (true);
+
+alter table public.arcs enable row level security;
+
+drop policy if exists "authenticated_select_arcs" on public.arcs;
+create policy "authenticated_select_arcs"
+on public.arcs
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_arcs" on public.arcs;
+create policy "authenticated_insert_arcs"
+on public.arcs
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_arcs" on public.arcs;
+create policy "authenticated_update_arcs"
+on public.arcs
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_arcs" on public.arcs;
+create policy "authenticated_delete_arcs"
+on public.arcs
+for delete
+to authenticated
+using (true);
+
+alter table public.arc_thread enable row level security;
+
+drop policy if exists "authenticated_select_arc_thread" on public.arc_thread;
+create policy "authenticated_select_arc_thread"
+on public.arc_thread
+for select
+to authenticated
+using (true);
+
+drop policy if exists "authenticated_insert_arc_thread" on public.arc_thread;
+create policy "authenticated_insert_arc_thread"
+on public.arc_thread
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "authenticated_update_arc_thread" on public.arc_thread;
+create policy "authenticated_update_arc_thread"
+on public.arc_thread
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "authenticated_delete_arc_thread" on public.arc_thread;
+create policy "authenticated_delete_arc_thread"
+on public.arc_thread
+for delete
+to authenticated
+using (true);
+</file>
+
+<file path="workers/arc/index.ts">
+import { prisma } from "../../packages/shared/libs/prisma";
+import { chatCompletion } from "../../packages/shared/libs/openai";
+import { parseArcSummary, keywordSet, overlaps } from "../../packages/shared/libs/arc";
+import { broadcastCounts, broadcastEvent } from "../../packages/shared/libs/broadcast";
+import { writeAuditLog } from "../../packages/shared/libs/audit";
+
+type ThreadBundle = {
+  owner: string;
+  threadId: string;
+  text: string;
+  keywords: Set<string>;
+};
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function loadThreadBundles() {
+  const moments = await prisma.moment.findMany({
+    where: {
+      state: "approved",
+      threadId: { not: null },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const byThread = new Map<string, ThreadBundle>();
+  for (const moment of moments) {
+    if (!moment.threadId) continue;
+    const key = `${moment.owner}:${moment.threadId}`;
+    const existing = byThread.get(key);
+    const text = [moment.title, moment.context, moment.intention, moment.need].filter(Boolean).join(" ");
+    if (existing) {
+      existing.text += `\n${text}`;
+      existing.keywords = keywordSet(existing.text);
+    } else {
+      byThread.set(key, {
+        owner: moment.owner,
+        threadId: moment.threadId,
+        text,
+        keywords: keywordSet(text),
+      });
+    }
+  }
+  return [...byThread.values()];
+}
+
+function groupBundles(bundles: ThreadBundle[]) {
+  const groups: ThreadBundle[][] = [];
+  for (const bundle of bundles) {
+    const group = groups.find((candidate) => candidate[0]?.owner === bundle.owner && candidate.some((item) => overlaps(item.keywords, bundle.keywords)));
+    if (group) group.push(bundle);
+    else groups.push([bundle]);
+  }
+  return groups.filter((group) => group.length > 1);
+}
+
+async function processGroups() {
+  const groups = groupBundles(await loadThreadBundles());
+  let changed = false;
+
+  for (const group of groups) {
+    const alreadyLinked = await prisma.arcThread.findFirst({
+      where: { threadId: group[0].threadId },
+    });
+    if (alreadyLinked) continue;
+
+    const prompt = [
+      "Summarise these threads into a single narrative arc. Return only JSON with keys title, summary, confidence.",
+      group.map((thread) => `Thread ${thread.threadId}:\n${thread.text}`).join("\n\n"),
+    ].join("\n\n");
+    const parsed = parseArcSummary(await chatCompletion(prompt));
+    const arc = await prisma.arc.create({
+      data: {
+        owner: group[0].owner,
+        title: parsed.title || "Untitled arc",
+        summary: parsed.summary || group.map((thread) => thread.text).join("\n\n").slice(0, 1000),
+        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.5,
+        status: "draft",
+        threads: {
+          create: group.map((thread) => ({ threadId: thread.threadId })),
+        },
+      },
+    });
+
+    await writeAuditLog({
+      actor: group[0].owner,
+      event: "arc-create",
+      objectType: "Arc",
+      objectId: arc.id,
+      payload: { threadIds: group.map((thread) => thread.threadId) },
+    });
+    await broadcastEvent("arc_update", { arcId: arc.id, owner: arc.owner });
+    changed = true;
+  }
+
+  if (changed) await broadcastCounts();
+}
+
+async function main() {
+  for (;;) {
+    try {
+      await processGroups();
+    } catch (error) {
+      console.error("[arc]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(5 * 60 * 1000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/dedupe/index.ts">
+import { prisma } from "../../packages/shared/libs/prisma";
+import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function processDuplicates() {
+  const duplicateHashes = await prisma.file.groupBy({
+    by: ["hash"],
+    _count: { hash: true },
+    having: { hash: { _count: { gt: 1 } } },
+  });
+
+  let created = false;
+  for (const duplicate of duplicateHashes) {
+    const files = await prisma.file.findMany({
+      where: { hash: duplicate.hash },
+      orderBy: { createdAt: "asc" },
+    });
+    if (files.length < 2) continue;
+
+    const alreadyGrouped = await prisma.duplicateItem.findFirst({
+      where: { objectType: "File", objectId: files[0].id },
+    });
+    if (alreadyGrouped) continue;
+
+    const group = await prisma.duplicateGroup.create({
+      data: {
+        confidence: 1,
+        items: {
+          create: files.map((file) => ({
+            objectType: "File",
+            objectId: file.id,
+          })),
+        },
+      },
+    });
+
+    await prisma.reviewQueue.create({
+      data: {
+        objectType: "DuplicateGroup",
+        objectId: group.id,
+        reason: "Duplicate files",
+        status: "unreviewed",
+      },
+    });
+    await broadcastCounts();
+    created = true;
+  }
+
+  return created;
+}
+
+async function main() {
+  for (;;) {
+    try {
+      await processDuplicates();
+    } catch (error) {
+      console.error("[dedupe]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(10000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/ingestion/index.ts">
+import path from "path";
+import AdmZip from "adm-zip";
+import pdf from "pdf-parse";
+import { prisma } from "../../packages/shared/libs/prisma";
+import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+import { writeAuditLog } from "../../packages/shared/libs/audit";
+import {
+  downloadFile,
+  extractedTextBucket,
+  hashBuffer,
+  safeOriginalName,
+  uploadFile,
+} from "../../packages/shared/libs/storage";
+
+const directExtensions = new Set([".txt", ".md", ".csv"]);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function extractText(fileName: string, storagePath: string) {
+  const ext = path.extname(fileName || storagePath).toLowerCase();
+  const buffer = await downloadFile(storagePath);
+  if (directExtensions.has(ext)) {
+    return buffer.toString("utf8");
+  }
+  if (ext === ".pdf") {
+    const parsed = await pdf(buffer);
+    return parsed.text;
+  }
+  return "";
+}
+
+function safeZipStoragePath(owner: string, fileId: string, entryName: string) {
+  const sanitizedParts = entryName
+    .split(/[\\/]+/)
+    .map((part) => safeOriginalName(part))
+    .filter(Boolean);
+  if (!sanitizedParts.length) return null;
+  return `${owner}/unzipped/${fileId}/${sanitizedParts.join("/")}`;
+}
+
+async function ingestZipEntries(file: { id: string; owner: string; storagePath: string }) {
+  const zip = new AdmZip(await downloadFile(file.storagePath));
+
+  for (const entry of zip.getEntries()) {
+    if (entry.isDirectory) continue;
+
+    const storagePath = safeZipStoragePath(file.owner, file.id, entry.entryName);
+    if (!storagePath) continue;
+
+    const buffer = entry.getData();
+    await uploadFile(buffer, storagePath, "whiteboard-originals");
+    await prisma.file.create({
+      data: {
+        owner: file.owner,
+        name: entry.entryName,
+        type: path.extname(entry.entryName).toLowerCase() || "application/octet-stream",
+        size: entry.header.size,
+        hash: hashBuffer(buffer),
+        storagePath,
+        status: "new",
+      },
+    });
+  }
+
+  await prisma.file.update({
+    where: { id: file.id },
+    data: { status: "archived" },
+  });
+  await broadcastCounts();
+}
+
+async function processOne() {
+  const file = await prisma.file.findFirst({
+    where: { status: "new" },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!file) return false;
+
+  if (path.extname(file.name || file.storagePath).toLowerCase() === ".zip") {
+    await ingestZipEntries(file);
+    return true;
+  }
+
+  const content = await extractText(file.name, file.storagePath);
+  const extractedPath = `${file.owner}/extracted/${file.id}.txt`;
+  await uploadFile(Buffer.from(content, "utf8"), extractedPath, extractedTextBucket, "text/plain");
+  await prisma.extractedContent.create({
+    data: {
+      fileId: file.id,
+      content,
+      storagePath: extractedPath,
+      confidence: content ? 1 : 0,
+    },
+  });
+  await prisma.file.update({
+    where: { id: file.id },
+    data: { status: "extracted" },
+  });
+  await writeAuditLog({
+    actor: file.owner,
+    event: "file-extracted",
+    objectType: "File",
+    objectId: file.id,
+    payload: { extractedPath },
+  });
+  await broadcastCounts();
+  return true;
+}
+
+async function main() {
+  for (;;) {
+    let worked = false;
+    try {
+      worked = await processOne();
+    } catch (error) {
+      console.error("[ingestion]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(worked ? 100 : 3000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/moment/index.ts">
+import { prisma } from "../../packages/shared/libs/prisma";
+import { chatCompletion } from "../../packages/shared/libs/openai";
+import { writeAuditLog } from "../../packages/shared/libs/audit";
+import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+
+type MomentJson = {
+  context?: string;
+  intention?: string;
+  need?: string;
+  title?: string;
+  confidence?: number;
+};
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseMomentJson(raw: string): MomentJson {
+  const trimmed = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "");
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return { context: "", intention: "", need: "", title: "", confidence: 0.5 };
+  }
+}
+
+async function processOne() {
+  const signal = await prisma.signal.findFirst({
+    where: { status: "new" },
+    orderBy: { createdAt: "asc" },
+    include: { extractedContent: { include: { file: true } } },
+  });
+  if (!signal) return false;
+
+  const prompt = [
+    "Return only JSON with keys context, intention, need, title, confidence.",
+    "Summarize this evidence as a candidate XROIQ moment:",
+    signal.content,
+  ].join("\n\n");
+
+  const parsed = parseMomentJson(await chatCompletion(prompt));
+  const confidence = typeof parsed.confidence === "number" ? parsed.confidence : 0.5;
+
+  const moment = await prisma.moment.create({
+    data: {
+      title: parsed.title || null,
+      owner: signal.extractedContent.file.owner,
+      context: parsed.context || signal.content.slice(0, 500),
+      intention: parsed.intention || null,
+      need: parsed.need || null,
+      state: "candidate",
+      consent: "unreviewed",
+      outcome: null,
+      confidence,
+    },
+  });
+
+  await prisma.momentEvidence.create({
+    data: {
+      momentId: moment.id,
+      signalId: signal.id,
+      fileId: signal.extractedContent.fileId,
+    },
+  });
+
+  await prisma.signal.update({
+    where: { id: signal.id },
+    data: { status: "processed" },
+  });
+
+  await prisma.reviewQueue.create({
+    data: {
+      objectType: "Moment",
+      objectId: moment.id,
+      reason: "New Candidate Moment",
+      status: "unreviewed",
+    },
+  });
+  await writeAuditLog({
+    actor: signal.extractedContent.file.owner,
+    event: "moment-candidate",
+    objectType: "Moment",
+    objectId: moment.id,
+  });
+  await broadcastCounts();
+
+  return true;
+}
+
+async function main() {
+  for (;;) {
+    let worked = false;
+    try {
+      worked = await processOne();
+    } catch (error) {
+      console.error("[moment]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(worked ? 100 : 3000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/priority/index.ts">
+import { prisma } from "../../packages/shared/libs/prisma";
+import { scoreMoment } from "../../packages/shared/libs/priority";
+import { broadcastCounts, broadcastEvent } from "../../packages/shared/libs/broadcast";
+import { writeAuditLog } from "../../packages/shared/libs/audit";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function nextRank(bucket: string) {
+  const top = await prisma.priority.findFirst({
+    where: { bucket },
+    orderBy: { rank: "desc" },
+  });
+  return (top?.rank || 0) + 1;
+}
+
+async function processOne() {
+  const moment = await prisma.moment.findFirst({
+    where: {
+      state: "approved",
+      priority: null,
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+  if (!moment) return false;
+
+  const scored = scoreMoment(moment);
+  const priority = await prisma.priority.create({
+    data: {
+      momentId: moment.id,
+      rank: await nextRank(scored.bucket),
+      bucket: scored.bucket,
+      reason: scored.reason,
+    },
+  });
+
+  await writeAuditLog({
+    actor: moment.owner,
+    event: "priority-create",
+    objectType: "Priority",
+    objectId: priority.id,
+    payload: {
+      momentId: moment.id,
+      bucket: scored.bucket,
+      score: scored.score,
+    },
+  });
+  await broadcastEvent("priority_update", { momentId: moment.id, bucket: scored.bucket });
+  await broadcastCounts();
+  return true;
+}
+
+async function main() {
+  for (;;) {
+    let worked = false;
+    try {
+      worked = await processOne();
+    } catch (error) {
+      console.error("[priority]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(worked ? 100 : 3000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/signal/index.ts">
+import { prisma } from "../../packages/shared/libs/prisma";
+import { writeAuditLog } from "../../packages/shared/libs/audit";
+import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function chunkByTokens(text: string, maxTokens = 1000) {
+  const tokens = text.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [""];
+  const chunks: string[] = [];
+  for (let index = 0; index < tokens.length; index += maxTokens) {
+    chunks.push(tokens.slice(index, index + maxTokens).join(" "));
+  }
+  return chunks;
+}
+
+async function processOne() {
+  const extracted = await prisma.extractedContent.findFirst({
+    where: { signals: { none: {} } },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!extracted) return false;
+
+  const chunks = chunkByTokens(extracted.content);
+  await prisma.$transaction(
+    chunks.map((content) =>
+      prisma.signal.create({
+        data: {
+          extractedContentId: extracted.id,
+          content,
+          confidence: content ? extracted.confidence : 0,
+          status: "new",
+        },
+      }),
+    ),
+  );
+  await writeAuditLog({
+    event: "signal-create",
+    objectType: "ExtractedContent",
+    objectId: extracted.id,
+    payload: { chunks: chunks.length },
+  });
+  await broadcastCounts();
+  return true;
+}
+
+async function main() {
+  for (;;) {
+    let worked = false;
+    try {
+      worked = await processOne();
+    } catch (error) {
+      console.error("[signal]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(worked ? 100 : 3000);
+  }
+}
+
+main();
+</file>
+
+<file path="workers/thread/index.ts">
+import crypto from "crypto";
+import { prisma } from "../../packages/shared/libs/prisma";
+import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function threadIdFor(owner: string, intention: string) {
+  return crypto.createHash("sha1").update(`${owner}:${intention}`).digest("hex").slice(0, 16);
+}
+
+async function linkThreads() {
+  const groups = await prisma.moment.groupBy({
+    by: ["owner", "intention"],
+    where: {
+      intention: { not: null },
+    },
+    _count: { id: true },
+    having: { id: { _count: { gt: 1 } } },
+  });
+
+  let changed = false;
+  for (const group of groups) {
+    if (!group.intention) continue;
+    const threadId = threadIdFor(group.owner, group.intention);
+    const result = await prisma.moment.updateMany({
+      where: {
+        owner: group.owner,
+        intention: group.intention,
+        threadId: null,
+      },
+      data: { threadId },
+    });
+    changed ||= result.count > 0;
+  }
+
+  if (changed) await broadcastCounts();
+}
+
+async function main() {
+  for (;;) {
+    try {
+      await linkThreads();
+    } catch (error) {
+      console.error("[thread]", error);
+    } finally {
+      await prisma.$disconnect();
+    }
+    await sleep(60000);
+  }
+}
+
+main();
+</file>
+
+<file path="apps/web/components/Shell.tsx">
+import { ReactNode } from "react";
+import { LogOut } from "lucide-react";
+import { useSupabase } from "../lib/SupabaseProvider";
+
+export function Shell({ children }: { children: ReactNode }) {
+  const supabase = useSupabase();
+
+  return (
+    <main className="min-h-screen bg-slate-950 text-white">
+      <header className="border-b border-slate-800">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <a className="text-base font-semibold text-white hover:no-underline" href="/">XROIQ Whiteboard</a>
+          <nav className="flex items-center gap-4 text-sm text-slate-300">
+            <a className="text-slate-300" href="/upload">Upload</a>
+            <a className="text-slate-300" href="/review">Review</a>
+            <a className="text-slate-300" href="/priority">Priority</a>
+            <a className="text-slate-300" href="/arcs">Arcs</a>
+            <button
+              className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
+              onClick={() => supabase.auth.signOut()}
+              type="button"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+          </nav>
+        </div>
+      </header>
+      <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>
+    </main>
+  );
+}
+</file>
+
+<file path="apps/web/lib/realtime.ts">
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export type WhiteboardCounts = {
+  filesNew: number;
+  candidateMoments: number;
+  topPriorityMoments: number;
+  reviewQueue: number;
+  duplicateGroups: number;
+};
+
+export function subscribeToCounts(
+  supabase: SupabaseClient,
+  onCounts: (payload: WhiteboardCounts) => void,
+) {
+  const channel = supabase
+    .channel("whiteboard_counts")
+    .on("broadcast", { event: "counts" }, ({ payload }) => onCounts(payload as WhiteboardCounts))
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+</file>
+
+<file path="apps/web/next-env.d.ts">
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/pages/api-reference/config/typescript for more information.
+</file>
+
+<file path="apps/web/next.config.js">
+const fs = require("fs");
+const path = require("path");
+
+function loadRootEnvFile(fileName) {
+  const envPath = path.join(__dirname, "..", "..", fileName);
+  if (!fs.existsSync(envPath)) return;
+
+  const content = fs.readFileSync(envPath, "utf8");
+  for (const line of content.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!match) continue;
+    const [, key, rawValue] = match;
+    if (process.env[key]) continue;
+    process.env[key] = rawValue.replace(/^["']|["']$/g, "");
+  }
+}
+
+loadRootEnvFile(".env.local");
+loadRootEnvFile(".env");
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    externalDir: true,
+  },
+};
+
+module.exports = nextConfig;
+</file>
+
+<file path="apps/web/pages/api/review/[id].ts">
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "../../../../../packages/shared/libs/prisma";
+import { writeAuditLog } from "../../../../../packages/shared/libs/audit";
+import { broadcastCounts } from "../../../../../packages/shared/libs/broadcast";
+
+const actions = new Set(["approve", "reject", "archive"]);
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const id = Array.isArray(req.query.id) ? req.query.id[0] : req.query.id;
+  const action = req.body?.action;
+  if (!id || !actions.has(action)) {
+    return res.status(400).json({ error: "Expected action approve, reject, or archive" });
+  }
+
+  const item = await prisma.reviewQueue.update({
+    where: { id },
+    data: { status: action },
+  });
+
+  if (item.objectType === "Moment") {
+    await prisma.moment.update({
+      where: { id: item.objectId },
+      data: {
+        state: action === "approve" ? "approved" : action === "reject" ? "rejected" : "archived",
+        consent: action,
+      },
+    });
+  }
+
+  await writeAuditLog({
+    actor: null,
+    event: item.objectType === "Moment" && action === "approve" ? "moment-approved" : `review-${action}`,
+    objectType: item.objectType,
+    objectId: item.objectId,
+    payload: { reviewQueueId: item.id },
+  });
+  await broadcastCounts();
+
+  return res.status(200).json(item);
+}
+</file>
+
+<file path="apps/web/pages/index.tsx">
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Shell } from "../components/Shell";
+import { subscribeToCounts, type WhiteboardCounts } from "../lib/realtime";
+import { useSupabase } from "../lib/SupabaseProvider";
+
+const cards: Array<{ key: keyof WhiteboardCounts; label: string }> = [
+  { key: "filesNew", label: "Files New" },
+  { key: "topPriorityMoments", label: "Top Priority Moments" },
+  { key: "reviewQueue", label: "Review Queue" },
+  { key: "duplicateGroups", label: "Duplicates" },
+];
+
+export default function Home() {
+  const supabase = useSupabase();
+  const [data, setData] = useState<WhiteboardCounts | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/summary")
+      .then((res) => res.json())
+      .then(setData)
+      .catch(() => setError(true));
+
+    return subscribeToCounts(supabase, setData);
+  }, [supabase]);
+
+  return (
+    <Shell>
+      <header className="mb-8">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-normal">XROIQ Whiteboard</h1>
+          <p className="mt-2 text-sm text-slate-400">Cloud-backed file intelligence pipeline.</p>
+        </div>
+      </header>
+
+      {error ? <p className="mb-4 text-sm text-rose-300">Summary unavailable.</p> : null}
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <Card key={card.key}>
+            <CardHeader>
+              <CardTitle>{card.label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-semibold">{data ? data[card.key] : "..."}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+    </Shell>
+  );
+}
+</file>
+
+<file path="apps/web/tailwind.config.js">
+const config = require("../../tailwind.config.js");
+module.exports = config;
+</file>
+
+<file path="apps/web/tsconfig.json">
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "target": "ES2017"
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+</file>
+
+<file path="packages/shared/libs/broadcast.ts">
+import { getSupabaseAdmin } from "./supabase";
+import { getWhiteboardCounts } from "./counts";
+
+export async function broadcastCounts() {
+  try {
+    const supabase = getSupabaseAdmin();
+    const payload = await getWhiteboardCounts();
+    await supabase.channel("whiteboard_counts").send({
+      type: "broadcast",
+      event: "counts",
+      payload,
+    });
+  } catch (error) {
+    console.warn("[realtime] counts broadcast skipped", error);
+  }
+}
+
+export async function broadcastEvent(event: string, payload: Record<string, unknown>) {
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.channel("whiteboard_counts").send({
+      type: "broadcast",
+      event,
+      payload,
+    });
+  } catch (error) {
+    console.warn(`[realtime] ${event} broadcast skipped`, error);
+  }
+}
+</file>
+
+<file path="packages/shared/libs/counts.ts">
+import { prisma } from "./prisma";
+
+export async function getWhiteboardCounts() {
+  const [filesNew, candidateMoments, topPriorityMoments, reviewQueue, duplicateGroups] = await Promise.all([
+    prisma.file.count({ where: { status: "new" } }),
+    prisma.moment.count({ where: { state: "candidate" } }),
+    prisma.priority.count({ where: { bucket: "immediate" } }),
+    prisma.reviewQueue.count({ where: { status: "unreviewed" } }),
+    prisma.duplicateGroup.count(),
+  ]);
+
+  return { filesNew, candidateMoments, topPriorityMoments, reviewQueue, duplicateGroups };
+}
+</file>
+
+<file path="packages/shared/libs/storage.ts">
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { getSupabaseAdmin } from "./supabase";
+
+export const filesDir = path.join(process.cwd(), "data", "files");
+export const originalsBucket = "whiteboard-originals";
+export const extractedTextBucket = "whiteboard-extracted-text";
+export const exportsBucket = "whiteboard-exports";
+
+export async function ensureFilesDir() {
+  await fs.promises.mkdir(filesDir, { recursive: true });
+}
+
+export function safeOriginalName(name: string) {
+  return path.basename(name).replace(/[^\w.\- ]+/g, "_");
+}
+
+export async function hashFile(filePath: string) {
+  return new Promise<string>((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = fs.createReadStream(filePath);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(hash.digest("hex")));
+  });
+}
+
+export function hashBuffer(buffer: Buffer) {
+  return crypto.createHash("sha256").update(buffer).digest("hex");
+}
+
+export async function uploadFile(buffer: Buffer, storagePath: string, bucket = originalsBucket, contentType?: string) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.storage.from(bucket).upload(storagePath, buffer, {
+    contentType,
+    upsert: true,
+  });
+  if (error) throw error;
+  return storagePath;
+}
+
+export async function downloadFile(storagePath: string, bucket = originalsBucket) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.storage.from(bucket).download(storagePath);
+  if (error) throw error;
+  return Buffer.from(await data.arrayBuffer());
+}
+
+export async function getSignedUrl(storagePath: string, bucket = originalsBucket, expiresIn = 60 * 15) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(storagePath, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+</file>
+
+<file path="pnpm-workspace.yaml">
+overrides:
+  '@supabase/auth-helpers-nextjs': 0.9.0
+  '@supabase/auth-helpers-react': 0.4.0
+
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+</file>
+
+<file path="postcss.config.js">
+module.exports = {
+  plugins: {
+    tailwindcss: { config: "./tailwind.config.js" },
+    autoprefixer: {},
+  },
+};
+</file>
+
+<file path="prisma/schema.prisma">
+datasource db {
+  provider     = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model File {
+  id          String   @id @default(cuid())
+  owner       String   @default("unassigned")
+  name        String
+  type        String
+  size        Int
+  hash        String
+  storagePath String
+  status      String
+  createdAt   DateTime @default(now())
+
+  ExtractedContent ExtractedContent[]
+  evidences        MomentEvidence[]
+}
+
+model ExtractedContent {
+  id         String  @id @default(cuid())
+  file       File    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId     String
+  content    String
+  storagePath String?
+  confidence Float
+  createdAt  DateTime @default(now())
+
+  signals    Signal[]
+}
+
+model Signal {
+  id          String   @id @default(cuid())
+  extractedContent ExtractedContent @relation(fields: [extractedContentId], references: [id], onDelete: Cascade)
+  extractedContentId String
+  content     String
+  confidence  Float
+  status      String
+  createdAt   DateTime @default(now())
+
+  MomentEvidence MomentEvidence[]
+}
+
+model Moment {
+  id          String   @id @default(cuid())
+  owner       String   @default("unassigned")
+  threadId    String?
+  title       String?
+  context     String
+  intention   String?
+  need        String?
+  state       String
+  consent     String
+  outcome     String?
+  confidence  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  evidence    MomentEvidence[]
+  priority    Priority?
+
+  @@index([owner, intention])
+  @@index([threadId])
+}
+
+model MomentEvidence {
+  id        String  @id @default(cuid())
+  moment    Moment  @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  momentId  String
+
+  signal    Signal  @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  signalId  String
+
+  file      File?   @relation(fields: [fileId], references: [id])
+  fileId    String?
+}
+
+model ReviewQueue {
+  id         String   @id @default(cuid())
+  objectType String
+  objectId   String
+  reason     String
+  status     String
+  createdAt  DateTime @default(now())
+}
+
+model DuplicateGroup {
+  id         String   @id @default(cuid())
+  confidence Float
+  createdAt  DateTime @default(now())
+
+  items      DuplicateItem[]
+}
+
+model DuplicateItem {
+  id        String   @id @default(cuid())
+  group     DuplicateGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  objectType String
+  objectId  String
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  role      String   @default("operator")
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      String?
+  event      String
+  objectType String
+  objectId   String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_log")
+  @@index([event])
+  @@index([createdAt])
+}
+
+model Priority {
+  id        String   @id @default(cuid())
+  moment    Moment   @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  momentId  String   @unique
+  rank      Int
+  bucket    String
+  reason    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("priorities")
+  @@index([bucket, rank])
+}
+
+model Arc {
+  id         String      @id @default(cuid())
+  owner      String
+  title      String
+  summary    String
+  confidence Float
+  status     String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  threads    ArcThread[]
+
+  @@map("arcs")
+  @@index([owner, status])
+}
+
+model ArcThread {
+  id        String   @id @default(cuid())
+  arc       Arc      @relation(fields: [arcId], references: [id], onDelete: Cascade)
+  arcId     String
+  threadId  String
+  createdAt DateTime @default(now())
+
+  @@map("arc_thread")
+  @@unique([arcId, threadId])
+  @@index([threadId])
+}
+</file>
+
+<file path="README.md">
+# XROIQ Whiteboard
+
+Production-intended dashboard for turning uploaded files into extracted content, signals, candidate moments, review queue items, duplicate groups, and threaded moment clusters.
+
+## Run Sequence
+
+1. Copy `.env.local.example` to `.env.local` and fill in Supabase keys:
+
+   ```powershell
+   Copy-Item .env.local.example .env.local
+   ```
+
+2. Start Supabase locally:
+
+   ```powershell
+   pnpm supabase:start
+   pnpm supabase db reset     # drops & replays migrations
+   ```
+
+3. Install dependencies:
+
+   ```powershell
+   pnpm install
+   ```
+
+4. Apply database changes:
+
+   ```powershell
+   pnpm prisma:migrate
+   ```
+
+5. Start the web app:
+
+   ```powershell
+   pnpm dev
+   ```
+
+6. In a second terminal, start the workers:
+
+   ```powershell
+   pnpm dev:workers
+   ```
+
+7. Open:
+
+   - Dashboard: http://localhost:3000
+   - Upload: http://localhost:3000/upload
+   - Review: http://localhost:3000/review
+   - Priority Board: http://localhost:3000/priority
+   - Arc Explorer: http://localhost:3000/arcs
+
+Original files are stored in Supabase Storage bucket `whiteboard-originals`; extracted text is stored in `whiteboard-extracted-text`. If `OPENAI_API_KEY` is blank, moment generation uses a local stub response.
+
+## Docker Dev
+
+```powershell
+docker compose -f docker-compose.dev.yml up
+```
+
+### Invite users
+
+1. In Supabase Dashboard -> Auth -> Users -> `Invite user`.
+2. Or CLI:
+
+   ```powershell
+   supabase auth invite --email jessicaleewatson@gmail.com
+   supabase auth invite --email karneyay007@gmail.com
+   ```
+
+Public sign-up is disabled. The whitelist migration allows `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`.
+Local public sign-up is disabled by `supabase/config.toml`; invite Jess and Karne manually before first use.
+
+## Phase-4 workers
+
+```powershell
+pnpm worker:priority
+pnpm worker:arc
+```
+
+`pnpm dev:workers` starts the full ingestion, signal, moment, dedupe, thread, priority, and arc worker set.
+</file>
+
+<file path="tailwind.config.js">
+const path = require("path");
+
+const webPath = (...parts) => path.join(__dirname, "apps", "web", ...parts).replace(/\\/g, "/");
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    webPath("pages/**/*.{js,ts,jsx,tsx,mdx}"),
+    webPath("components/**/*.{js,ts,jsx,tsx,mdx}"),
+    webPath("lib/**/*.{js,ts,jsx,tsx,mdx}"),
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+</file>
+
+<file path="apps/web/pages/login.tsx">
+import { useState } from "react";
+import { useRouter } from "next/router";
+import type { Provider } from "@supabase/supabase-js";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useSupabase } from "../lib/SupabaseProvider";
+
+const oauthProvider = (process.env.NEXT_PUBLIC_SUPABASE_OAUTH_PROVIDER || "google") as Provider;
+const oauthProviderLabel = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_LABEL || "Google";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const supabase = useSupabase();
+  const [message, setMessage] = useState("");
+
+  async function signIn() {
+    const next = typeof router.query.next === "string" ? router.query.next : "/";
+    setMessage("Redirecting...");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: oauthProvider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    });
+    if (error) setMessage("Could not start sign in. Check the OAuth provider settings.");
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign in to XROIQ Whiteboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full" onClick={signIn} type="button">Continue with {oauthProviderLabel}</Button>
+          {message ? <p className="mt-4 text-sm text-slate-300">{message}</p> : null}
+          <a className="mt-4 block text-sm text-slate-300" href="/signup">Need access?</a>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
+</file>
+
+<file path="scripts/assert-invite-only-auth.js">
+const fs = require("node:fs");
+const path = require("node:path");
+
+const root = path.resolve(__dirname, "..");
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function tomlSection(source, sectionName) {
+  const lines = source.split(/\r?\n/);
+  const start = lines.findIndex((line) => line.trim() === `[${sectionName}]`);
+  if (start === -1) {
+    return null;
+  }
+
+  const body = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^\s*\[.+\]\s*$/.test(line)) {
+      break;
+    }
+    body.push(line);
+  }
+
+  return body.join("\n");
+}
+
+const supabaseConfig = read("supabase/config.toml");
+const authSection = tomlSection(supabaseConfig, "auth");
+assert(authSection, "supabase/config.toml must include an [auth] section.");
+
+const enableSignup = authSection.match(/^\s*enable_signup\s*=\s*(true|false)\s*(?:#.*)?$/m);
+assert(
+  enableSignup && enableSignup[1] === "false",
+  "supabase/config.toml must keep auth.enable_signup disabled for invite-only auth.",
+);
+
+const loginPage = read("apps/web/pages/login.tsx");
+assert(
+  /supabase\.auth\.signInWithOAuth\s*\(\s*\{[\s\S]*?provider\s*:\s*oauthProvider[\s\S]*?redirectTo\s*:\s*`\$\{window\.location\.origin\}\/auth\/callback\?next=\$\{encodeURIComponent\(next\)\}`[\s\S]*?\}/m.test(loginPage),
+  "Login must use OAuth auth.",
+);
+assert(
+  !/supabase\.auth\.(signInWithOtp|signInWithPassword)/.test(loginPage) && !/magic link|password/i.test(loginPage),
+  "Login must not use magic links or password auth.",
+);
+
+const authCallbackPage = read("apps/web/pages/auth/callback.tsx");
+assert(
+  /supabase\.auth\.exchangeCodeForSession\s*\(\s*code\s*\)/.test(authCallbackPage),
+  "OAuth callback must exchange the auth code for a session.",
+);
+
+const signupPage = read("apps/web/pages/signup.tsx");
+assert(
+  /Sign-ups disabled/.test(signupPage) && /invite-only/i.test(signupPage),
+  "The signup route must remain an invite-only access notice.",
+);
+assert(
+  !/supabase\.auth\.(signUp|signInWithOtp|signInWithPassword|signInWithOAuth)/.test(signupPage),
+  "The signup route must not create users or start auth flows.",
+);
+
+console.log("Invite-only auth guard passed.");
+</file>
+
+<file path="supabase/config.toml">
+project_id = "xroiq-whiteboard-fixed"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = false
+</file>
+
+<file path="package.json">
+{
+  "name": "xroiq-whiteboard",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.5.3",
+  "resolutions": {
+    "@supabase/auth-helpers-nextjs": "0.9.0",
+    "@supabase/auth-helpers-react": "0.4.0"
+  },
+  "scripts": {
+    "dev": "next dev apps/web -p 3000",
+    "build": "next build apps/web",
+    "check:auth": "node scripts/assert-invite-only-auth.js",
+    "start": "next start apps/web -p 3000",
+    "supabase:start": "supabase start",
+    "worker": "tsx workers/$npm_config_worker/index.ts",
+    "worker:*": "tsx workers/$npm_config_worker/index.ts",
+    "worker:ingest": "tsx workers/ingestion/index.ts",
+    "worker:ingestion": "tsx workers/ingestion/index.ts",
+    "worker:signal": "tsx workers/signal/index.ts",
+    "worker:moment": "tsx workers/moment/index.ts",
+    "worker:dedupe": "tsx workers/dedupe/index.ts",
+    "worker:thread": "tsx workers/thread/index.ts",
+    "worker:priority": "tsx workers/priority/index.ts",
+    "worker:arc": "tsx workers/arc/index.ts",
+    "dev:workers": "concurrently -k \"pnpm worker --worker=ingestion\" \"pnpm worker --worker=signal\" \"pnpm worker --worker=moment\" \"pnpm worker --worker=dedupe\" \"pnpm worker --worker=thread\" \"pnpm worker --worker=priority\" \"pnpm worker --worker=arc\"",
+    "prisma:migrate": "prisma migrate dev --name init"
+  },
+  "dependencies": {
+    "@prisma/client": "5.9.0",
+    "@supabase/auth-helpers-react": "0.4.0",
+    "@supabase/supabase-js": "^2.108.1",
+    "adm-zip": "^0.5.17",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "formidable": "3.5.4",
+    "json2csv": "6.0.0-alpha.2",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.9",
+    "openai": "4.0.0",
+    "pdf-parse": "1.1.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "swr": "2.4.1",
+    "tailwind-merge": "^3.6.0",
+    "zustand": "4.4.1"
+  },
+  "devDependencies": {
+    "@supabase/auth-helpers-nextjs": "0.9.0",
+    "@types/adm-zip": "^0.5.8",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.43",
+    "@types/react": "19.2.17",
+    "autoprefixer": "10.5.0",
+    "concurrently": "10.0.3",
+    "jest": "^29.7.0",
+    "postcss": "8.5.15",
+    "prisma": "5.9.0",
+    "supabase": "^2.106.0",
+    "tailwindcss": "3.4.19",
+    "ts-jest": "^29.4.11",
+    "ts-node": "10.9.2",
+    "tsx": "4.22.4",
+    "typescript": "5.5.2"
+  }
+}
+</file>
+
+<file path=".github/workflows/ci.yml">
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 11.5.3
+          run_install: false
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+</file>
+
+</files>

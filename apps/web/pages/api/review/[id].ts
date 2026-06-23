@@ -32,6 +32,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  if (item.objectType === "File") {
+    await prisma.reviewLog.create({
+      data: {
+        fileId: item.objectId,
+        userId: "authenticated",
+        action,
+      },
+    });
+  }
+
   await writeAuditLog({
     actor: null,
     event: item.objectType === "Moment" && action === "approve" ? "moment-approved" : `review-${action}`,

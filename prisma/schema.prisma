@@ -9,6 +9,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum CategoryEnum {
+  operating_system @map("operating-system")
+  framework
+  design
+  task
+  note
+  junk
+
+  @@map("category_enum")
+}
+
 model File {
   id          String   @id @default(cuid())
   owner       String   @default("unassigned")
@@ -17,11 +28,34 @@ model File {
   size        Int
   hash        String
   storagePath String
+  rawText     String?  @map("raw_text")
+  category    CategoryEnum?
+  subBucket   String?  @map("sub_bucket")
+  needsAttention Boolean @default(false) @map("needs_attention")
+  duplicateOf String?  @map("duplicate_of")
+  summary     String?
   status      String
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   ExtractedContent ExtractedContent[]
   evidences        MomentEvidence[]
+  duplicateSource  File?          @relation("FileDuplicate", fields: [duplicateOf], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  duplicates       File[]         @relation("FileDuplicate")
+  vector           FileVector?
+  memoryEntries    MemoryEntry[]
+  reviewLogs       ReviewLog[]
+
+  @@index([owner, category])
+  @@index([duplicateOf])
+}
+
+model FileVector {
+  id   String @id
+  file File   @relation(fields: [id], references: [id], onDelete: Cascade)
+  vec  Unsupported("vector")
+
+  @@map("file_vector")
 }
 
 model ExtractedContent {
@@ -91,6 +125,19 @@ model ReviewQueue {
   createdAt  DateTime @default(now())
 }
 
+model ReviewLog {
+  id        String   @id @default(cuid())
+  file      File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  fileId    String?  @map("file_id")
+  userId    String   @map("user_id")
+  action    String
+  ts        DateTime @default(now())
+
+  @@map("review_log")
+  @@index([fileId])
+  @@index([userId])
+}
+
 model DuplicateGroup {
   id         String   @id @default(cuid())
   confidence Float
@@ -154,9 +201,28 @@ model Arc {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   threads    ArcThread[]
+  memoryEntries MemoryEntry[]
 
   @@map("arcs")
   @@index([owner, status])
+}
+
+model MemoryEntry {
+  id         String   @id @default(cuid())
+  sourceFile File     @relation(fields: [sourceFileId], references: [id], onDelete: Cascade)
+  sourceFileId String @unique @map("source_file")
+  arc        Arc?     @relation(fields: [arcId], references: [id], onDelete: SetNull)
+  arcId      String?  @map("arc_id")
+  summary    String?
+  keywords   String[] @default([])
+  confidence Float
+  status     String   @default("active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("memory_entries")
+  @@index([arcId])
+  @@index([status])
 }
 
 model ArcThread {

@@ -43,12 +43,18 @@ assert(
 
 const loginPage = read("apps/web/pages/login.tsx");
 assert(
-  /supabase\.auth\.signInWithOAuth\s*\(\s*\{[\s\S]*?provider\s*:\s*oauthProvider[\s\S]*?redirectTo\s*:\s*window\.location\.origin[\s\S]*?\}/m.test(loginPage),
+  /supabase\.auth\.signInWithOAuth\s*\(\s*\{[\s\S]*?provider\s*:\s*oauthProvider[\s\S]*?redirectTo\s*:\s*`\$\{window\.location\.origin\}\/auth\/callback\?next=\$\{encodeURIComponent\(next\)\}`[\s\S]*?\}/m.test(loginPage),
   "Login must use OAuth auth.",
 );
 assert(
   !/supabase\.auth\.(signInWithOtp|signInWithPassword)/.test(loginPage) && !/magic link|password/i.test(loginPage),
   "Login must not use magic links or password auth.",
+);
+
+const authCallbackPage = read("apps/web/pages/auth/callback.tsx");
+assert(
+  /supabase\.auth\.exchangeCodeForSession\s*\(\s*code\s*\)/.test(authCallbackPage),
+  "OAuth callback must exchange the auth code for a session.",
 );
 
 const signupPage = read("apps/web/pages/signup.tsx");

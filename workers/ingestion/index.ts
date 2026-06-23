@@ -1,4 +1,5 @@
 import path from "path";
+import { spawn } from "child_process";
 import AdmZip from "adm-zip";
 import pdf from "pdf-parse";
 import { prisma } from "../../packages/shared/libs/prisma";
@@ -16,6 +17,16 @@ const directExtensions = new Set([".txt", ".md", ".csv"]);
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function scanBuffer(buffer: Buffer) {
+  return new Promise<"clean" | "infected" | "unavailable">((resolve) => {
+    const command = process.env.CLAMAV_PATH || "clamscan";
+    const scan = spawn(command, ["--no-summary", "-"], { stdio: ["pipe", "ignore", "ignore"] });
+    scan.on("error", () => resolve("unavailable"));
+    scan.on("close", (code) => resolve(code === 0 ? "clean" : code === 1 ? "infected" : "unavailable"));
+    scan.stdin.end(buffer);
+  });
 }
 
 async function extractText(fileName: string, storagePath: string) {
@@ -50,6 +61,7 @@ async function ingestZipEntries(file: { id: string; owner: string; storagePath: 
     if (!storagePath) continue;
 
     const buffer = entry.getData();
+    if ((await scanBuffer(buffer)) === "infected") continue;
     await uploadFile(buffer, storagePath, "whiteboard-originals");
     await prisma.file.create({
       data: {
@@ -78,6 +90,20 @@ async function processOne() {
   });
   if (!file) return false;
 
+  const buffer = await downloadFile(file.storagePath);
+  const scan = await scanBuffer(buffer);
+  if (scan === "infected") {
+    await prisma.file.update({ where: { id: file.id }, data: { status: "quarantined" } });
+    await writeAuditLog({
+      actor: file.owner,
+      event: "file-quarantined",
+      objectType: "File",
+      objectId: file.id,
+    });
+    await broadcastCounts();
+    return true;
+  }
+
   if (path.extname(file.name || file.storagePath).toLowerCase() === ".zip") {
     await ingestZipEntries(file);
     return true;
@@ -96,7 +122,7 @@ async function processOne() {
   });
   await prisma.file.update({
     where: { id: file.id },
-    data: { status: "extracted" },
+    data: { rawText: content, status: "ingested" },
   });
   await writeAuditLog({
     actor: file.owner,

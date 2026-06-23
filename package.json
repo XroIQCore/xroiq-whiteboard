@@ -20,10 +20,13 @@
     "worker:signal": "tsx workers/signal/index.ts",
     "worker:moment": "tsx workers/moment/index.ts",
     "worker:dedupe": "tsx workers/dedupe/index.ts",
+    "worker:classify": "tsx workers/classify/index.ts",
     "worker:thread": "tsx workers/thread/index.ts",
     "worker:priority": "tsx workers/priority/index.ts",
     "worker:arc": "tsx workers/arc/index.ts",
-    "dev:workers": "concurrently -k \"pnpm worker --worker=ingestion\" \"pnpm worker --worker=signal\" \"pnpm worker --worker=moment\" \"pnpm worker --worker=dedupe\" \"pnpm worker --worker=thread\" \"pnpm worker --worker=priority\" \"pnpm worker --worker=arc\"",
+    "worker:memory": "tsx workers/memory/index.ts",
+    "worker:surfacer": "tsx workers/surfacer/index.ts",
+    "dev:workers": "concurrently -k \"pnpm worker --worker=ingestion\" \"pnpm worker --worker=dedupe\" \"pnpm worker --worker=classify\" \"pnpm worker --worker=memory\" \"pnpm worker --worker=surfacer\" \"pnpm worker --worker=signal\" \"pnpm worker --worker=moment\" \"pnpm worker --worker=thread\" \"pnpm worker --worker=priority\" \"pnpm worker --worker=arc\"",
     "prisma:migrate": "prisma migrate dev --name init"
   },
   "dependencies": {

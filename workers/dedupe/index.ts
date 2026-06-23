@@ -1,67 +1,96 @@
 import { prisma } from "../../packages/shared/libs/prisma";
 import { broadcastCounts } from "../../packages/shared/libs/broadcast";
+import { embedText } from "../../packages/shared/libs/llm";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function processDuplicates() {
-  const duplicateHashes = await prisma.file.groupBy({
-    by: ["hash"],
-    _count: { hash: true },
-    having: { hash: { _count: { gt: 1 } } },
+function vectorLiteral(values: number[]) {
+  return `[${values.map((value) => Number(value).toFixed(8)).join(",")}]`;
+}
+
+async function nearestVectorDuplicate(embedding: number[], fileId: string) {
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+      `select id from file_vector where id <> $1 and vec <=> $2::vector <= 0.10 order by vec <=> $2::vector limit 1`,
+      fileId,
+      vectorLiteral(embedding),
+    );
+    return rows[0]?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+async function upsertVector(fileId: string, embedding: number[]) {
+  try {
+    await prisma.$executeRawUnsafe(
+      `insert into file_vector (id, vec) values ($1, $2::vector) on conflict (id) do update set vec = excluded.vec`,
+      fileId,
+      vectorLiteral(embedding),
+    );
+  } catch {
+    // pgvector may be unavailable in local dev; exact dedupe still runs.
+  }
+}
+
+async function processOne() {
+  const file = await prisma.file.findFirst({
+    where: { status: "ingested" },
+    orderBy: { updatedAt: "asc" },
+  });
+  if (!file) return false;
+
+  const exact = await prisma.file.findFirst({
+    where: {
+      id: { not: file.id },
+      hash: file.hash,
+      status: { not: "new" },
+    },
+    orderBy: { createdAt: "asc" },
   });
 
-  let created = false;
-  for (const duplicate of duplicateHashes) {
-    const files = await prisma.file.findMany({
-      where: { hash: duplicate.hash },
-      orderBy: { createdAt: "asc" },
-    });
-    if (files.length < 2) continue;
+  const embedding = await embedText(file.rawText || file.name);
+  const semanticId = embedding ? await nearestVectorDuplicate(embedding, file.id) : null;
+  const duplicateOf = exact?.id || semanticId || null;
 
-    const alreadyGrouped = await prisma.duplicateItem.findFirst({
-      where: { objectType: "File", objectId: files[0].id },
-    });
-    if (alreadyGrouped) continue;
+  if (embedding) await upsertVector(file.id, embedding);
 
-    const group = await prisma.duplicateGroup.create({
-      data: {
-        confidence: 1,
-        items: {
-          create: files.map((file) => ({
-            objectType: "File",
-            objectId: file.id,
-          })),
-        },
-      },
-    });
+  await prisma.file.update({
+    where: { id: file.id },
+    data: {
+      duplicateOf,
+      status: duplicateOf ? "archived" : "deduped",
+    },
+  });
 
+  if (duplicateOf) {
     await prisma.reviewQueue.create({
       data: {
-        objectType: "DuplicateGroup",
-        objectId: group.id,
-        reason: "Duplicate files",
+        objectType: "File",
+        objectId: file.id,
+        reason: "Duplicate file",
         status: "unreviewed",
       },
     });
-    await broadcastCounts();
-    created = true;
   }
 
-  return created;
+  await broadcastCounts();
+  return true;
 }
 
 async function main() {
   for (;;) {
+    let worked = false;
     try {
-      await processDuplicates();
+      worked = await processOne();
     } catch (error) {
       console.error("[dedupe]", error);
     } finally {
       await prisma.$disconnect();
     }
-    await sleep(10000);
+    await sleep(worked ? 100 : 3000);
   }
 }
 

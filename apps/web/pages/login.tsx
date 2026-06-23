@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import type { Provider } from "@supabase/supabase-js";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -8,15 +9,17 @@ const oauthProvider = (process.env.NEXT_PUBLIC_SUPABASE_OAUTH_PROVIDER || "googl
 const oauthProviderLabel = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_LABEL || "Google";
 
 export default function LoginPage() {
+  const router = useRouter();
   const supabase = useSupabase();
   const [message, setMessage] = useState("");
 
   async function signIn() {
+    const next = typeof router.query.next === "string" ? router.query.next : "/";
     setMessage("Redirecting...");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: oauthProvider,
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
     if (error) setMessage("Could not start sign in. Check the OAuth provider settings.");

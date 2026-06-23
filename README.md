@@ -75,6 +75,9 @@ Local public sign-up is disabled by `supabase/config.toml`; invite Jess and Karn
 ```powershell
 pnpm worker:priority
 pnpm worker:arc
+pnpm worker:memory
+pnpm worker:classify
+pnpm worker:surfacer
 ```
 
-`pnpm dev:workers` starts the full ingestion, signal, moment, dedupe, thread, priority, and arc worker set.
+`pnpm dev:workers` starts the full ingest, dedupe, classify, memory, surfacer, signal, moment, thread, priority, and arc worker set.

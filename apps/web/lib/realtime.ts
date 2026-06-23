@@ -6,6 +6,8 @@ export type WhiteboardCounts = {
   topPriorityMoments: number;
   reviewQueue: number;
   duplicateGroups: number;
+  memoryEntries: number;
+  needsAttention: number;
 };
 
 export function subscribeToCounts(
