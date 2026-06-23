@@ -1,4 +1,4 @@
-FROM ghcr.io/ggerganov/llama.cpp:latest
+FROM ghcr.io/ggml-org/llama.cpp:server
 
 RUN mkdir -p /models \
   && curl -L --fail --retry 3 \
@@ -7,4 +7,5 @@ RUN mkdir -p /models \
 
 EXPOSE 8000
 
-CMD /app/server --model /models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --host 0.0.0.0 --port ${PORT:-8000} --threads ${LLAMA_THREADS:-4} --embedding
+ENTRYPOINT ["/bin/sh", "-c"]
+CMD ["exec /app/llama-server --model /models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --host 0.0.0.0 --port ${PORT:-8000} --threads ${LLAMA_THREADS:-4} --embedding"]
