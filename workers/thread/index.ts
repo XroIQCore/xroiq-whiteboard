@@ -43,7 +43,7 @@ async function main() {
     try {
       await linkThreads();
     } catch (error) {
-      console.error("[thread]", error);
+      console.info("[thread] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

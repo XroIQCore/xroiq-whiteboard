@@ -1,8 +1,7 @@
-import { useState } from "react";
 import useSWR from "swr";
 import { Shell } from "../components/Shell";
+import { SearchPanel } from "../components/SearchPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
 
 type MemoryEntry = {
   id: string;
@@ -20,11 +19,7 @@ type MemoryEntry = {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function MemoryPage() {
-  const [query, setQuery] = useState("");
-  const { data } = useSWR<{ entries: MemoryEntry[] }>(
-    query ? `/api/memory?q=${encodeURIComponent(query)}` : "/api/memory",
-    fetcher,
-  );
+  const { data } = useSWR<{ entries: MemoryEntry[] }>("/api/memory", fetcher);
 
   return (
     <Shell>
@@ -32,7 +27,7 @@ export default function MemoryPage() {
         <h1 className="text-3xl font-semibold">Memory</h1>
       </header>
 
-      <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search memory" />
+      <SearchPanel label="Search library" />
 
       <section className="mt-6 space-y-3">
         {(data?.entries || []).map((entry) => (

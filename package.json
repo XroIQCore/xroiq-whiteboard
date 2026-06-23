@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "next dev apps/web -p 3000",
+    "prebuild": "prisma generate",
     "build": "next build apps/web",
+    "test": "jest --runInBand",
     "check:auth": "node scripts/assert-invite-only-auth.js",
     "start": "next start apps/web -p 3000",
     "supabase:start": "supabase start",

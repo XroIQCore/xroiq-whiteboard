@@ -33,7 +33,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[classify]", error);
+      console.info("[classify] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

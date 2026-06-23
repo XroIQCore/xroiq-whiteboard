@@ -93,7 +93,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[moment]", error);
+      console.info("[moment] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

@@ -49,7 +49,24 @@ Production-intended dashboard for turning uploaded files into extracted content,
    - Priority Board: http://localhost:3000/priority
    - Arc Explorer: http://localhost:3000/arcs
 
-Original files are stored in Supabase Storage bucket `whiteboard-originals`; extracted text is stored in `whiteboard-extracted-text`. If `OPENAI_API_KEY` is blank, moment generation uses a local stub response.
+Original files are stored in Supabase Storage bucket `whiteboard-originals`; extracted text is stored in `whiteboard-extracted-text`. Workers use `LLM_URL` for local Mistral inference; `OPENAI_API_KEY` is only a fallback for legacy moment and arc completion.
+
+## Local LLM
+
+Place the Q4_K_M GGUF at `models/mistral-7b-instruct-v0.2.Q4_K_M.gguf`, then build the local llama.cpp service:
+
+```powershell
+.\scripts\download-mistral.ps1
+docker build -f llm.Dockerfile -t xroiq-llm .
+$env:LLM_URL="http://localhost:8000"
+.\scripts\smoke-llm.ps1
+```
+
+For only the local LLM service:
+
+```powershell
+docker compose -f docker-compose.dev.yml up llm
+```
 
 ## Docker Dev
 

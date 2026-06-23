@@ -102,7 +102,7 @@ async function main() {
     try {
       await processGroups();
     } catch (error) {
-      console.error("[arc]", error);
+      console.info("[arc] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

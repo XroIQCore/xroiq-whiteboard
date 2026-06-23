@@ -141,7 +141,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[ingestion]", error);
+      console.info("[ingestion] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

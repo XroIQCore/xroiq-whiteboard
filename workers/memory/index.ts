@@ -51,7 +51,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[memory]", error);
+      console.info("[memory] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

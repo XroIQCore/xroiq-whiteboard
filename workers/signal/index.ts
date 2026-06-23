@@ -52,7 +52,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[signal]", error);
+      console.info("[signal] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

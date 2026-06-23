@@ -27,3 +27,16 @@ export async function broadcastEvent(event: string, payload: Record<string, unkn
     console.warn(`[realtime] ${event} broadcast skipped`, error);
   }
 }
+
+export async function broadcastChannel(channelName: string, event: string, payload: Record<string, unknown>) {
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.channel(channelName).send({
+      type: "broadcast",
+      event,
+      payload,
+    });
+  } catch (error) {
+    console.warn(`[realtime] ${channelName}:${event} broadcast skipped`, error);
+  }
+}

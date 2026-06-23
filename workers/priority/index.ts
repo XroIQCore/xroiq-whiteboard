@@ -57,7 +57,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[priority]", error);
+      console.info("[priority] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

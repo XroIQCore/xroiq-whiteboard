@@ -1,10 +1,14 @@
 import OpenAI from "openai";
+import { completeText } from "./llm";
 
 const key = process.env.OPENAI_API_KEY || "";
 
 export async function chatCompletion(prompt: string) {
+  const local = await completeText(prompt);
+  if (local) return local;
+
   if (!key) {
-    return '{"context":"","intention":"","need":"","title":"","confidence":0.5}';
+    throw new Error("LLM_URL or OPENAI_API_KEY is required for chat completion");
   }
 
   const api = new OpenAI({ apiKey: key });

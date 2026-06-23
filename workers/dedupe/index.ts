@@ -86,7 +86,7 @@ async function main() {
     try {
       worked = await processOne();
     } catch (error) {
-      console.error("[dedupe]", error);
+      console.info("[dedupe] fatal", error);
     } finally {
       await prisma.$disconnect();
     }

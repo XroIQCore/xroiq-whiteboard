@@ -23,3 +23,17 @@ export function subscribeToCounts(
     supabase.removeChannel(channel);
   };
 }
+
+export function subscribeToSurfacer(
+  supabase: SupabaseClient,
+  onFile: (payload: { fileId?: string }) => void,
+) {
+  const channel = supabase
+    .channel("surfacer")
+    .on("broadcast", { event: "surfacer" }, ({ payload }) => onFile(payload as { fileId?: string }))
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}

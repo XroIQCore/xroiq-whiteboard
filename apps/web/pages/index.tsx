@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Shell } from "../components/Shell";
+import { SearchPanel } from "../components/SearchPanel";
 import { subscribeToCounts, type WhiteboardCounts } from "../lib/realtime";
 import { useSupabase } from "../lib/SupabaseProvider";
 
@@ -37,6 +38,8 @@ export default function Home() {
       </header>
 
       {error ? <p className="mb-4 text-sm text-rose-300">Summary unavailable.</p> : null}
+
+      <SearchPanel label="Search board" />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (

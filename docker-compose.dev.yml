@@ -1,4 +1,13 @@
 services:
+  llm:
+    build:
+      context: .
+      dockerfile: llm.Dockerfile
+    environment:
+      LLAMA_THREADS: "4"
+    ports:
+      - "8000:8000"
+
   supabase:
     image: supabase/cli:latest
     working_dir: /workspace
@@ -12,8 +21,11 @@ services:
     working_dir: /workspace
     depends_on:
       - supabase
+      - llm
     env_file:
       - .env.local
+    environment:
+      LLM_URL: http://llm:8000
     volumes:
       - .:/workspace
     command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev"]
@@ -25,8 +37,11 @@ services:
     working_dir: /workspace
     depends_on:
       - supabase
+      - llm
     env_file:
       - .env.local
+    environment:
+      LLM_URL: http://llm:8000
     volumes:
       - .:/workspace
     command: ["sh", "-lc", "corepack enable && pnpm install && pnpm dev:workers"]
