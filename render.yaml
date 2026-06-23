@@ -1,9 +1,11 @@
 services:
-  - type: pserv
+  - type: web
     name: llm
     env: docker
     dockerfilePath: ./llm.Dockerfile
     plan: free
+    autoDeploy: false
+    healthCheckPath: /health
     envVars:
       - key: LLAMA_THREADS
         value: "4"

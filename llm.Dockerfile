@@ -7,4 +7,4 @@ RUN mkdir -p /models \
 
 EXPOSE 8000
 
-CMD /app/server --model /models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --host 0.0.0.0 --port 8000 --threads ${LLAMA_THREADS:-4} --embedding
+CMD /app/server --model /models/mistral-7b-instruct-v0.2.Q4_K_M.gguf --host 0.0.0.0 --port ${PORT:-8000} --threads ${LLAMA_THREADS:-4} --embedding
