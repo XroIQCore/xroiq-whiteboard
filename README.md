@@ -87,6 +87,16 @@ docker compose -f docker-compose.dev.yml up
 Public sign-up is disabled. The whitelist migration allows `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`.
 Local public sign-up is disabled by `supabase/config.toml`; invite Jess and Karne manually before first use.
 
+### Google sign-in
+
+Enable Google in Supabase Auth and set `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` before starting local Supabase. The local Google redirect URI is:
+
+```text
+http://127.0.0.1:54321/auth/v1/callback
+```
+
+Invite `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`; public sign-up stays disabled.
+
 ## Phase-4 workers
 
 ## Start all workers (Windows)

@@ -7,6 +7,10 @@ function safeNext(value: string | string[] | undefined) {
   return value;
 }
 
+function firstString(value: string | string[] | undefined) {
+  return typeof value === "string" ? value : "";
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const supabase = useSupabase();
@@ -15,7 +19,13 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const code = typeof router.query.code === "string" ? router.query.code : "";
+    const oauthError = firstString(router.query.error_description) || firstString(router.query.error);
+    if (oauthError) {
+      setMessage(`Sign in could not finish: ${oauthError}`);
+      return;
+    }
+
+    const code = firstString(router.query.code);
     if (!code) {
       setMessage("Sign in could not finish. Please try again.");
       return;
@@ -23,7 +33,7 @@ export default function AuthCallbackPage() {
 
     supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
-        setMessage("Sign in could not finish. Please try again.");
+        setMessage(`Sign in could not finish: ${error.message}`);
         return;
       }
 
