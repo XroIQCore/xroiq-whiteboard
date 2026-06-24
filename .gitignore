@@ -9,6 +9,8 @@ out/
 dist/
 coverage/
 .cache/
+repomix-output.xml
+xro_iq_whiteboard_technical_architecture.md
 
 # environment and local secrets
 .env
