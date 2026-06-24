@@ -3,10 +3,6 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@11.5.3",
-  "resolutions": {
-    "@supabase/auth-helpers-nextjs": "0.9.0",
-    "@supabase/auth-helpers-react": "0.4.0"
-  },
   "scripts": {
     "dev": "next dev apps/web -p 3000",
     "prebuild": "prisma generate",
@@ -33,7 +29,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.9.0",
-    "@supabase/auth-helpers-react": "0.4.0",
+    "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "adm-zip": "^0.5.17",
     "class-variance-authority": "^0.7.1",
@@ -53,7 +49,6 @@
     "zustand": "4.4.1"
   },
   "devDependencies": {
-    "@supabase/auth-helpers-nextjs": "0.9.0",
     "@types/adm-zip": "^0.5.8",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.19.43",

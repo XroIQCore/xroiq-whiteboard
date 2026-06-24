@@ -53,8 +53,14 @@ assert(
 
 const authCallbackPage = read("apps/web/pages/auth/callback.tsx");
 assert(
-  /supabase\.auth\.exchangeCodeForSession\s*\(\s*code\s*\)/.test(authCallbackPage),
-  "OAuth callback must exchange the auth code for a session.",
+  /pathname\s*:\s*"\/api\/auth\/callback"/.test(authCallbackPage),
+  "OAuth callback page must forward auth codes to the server callback.",
+);
+
+const authCallbackApi = read("apps/web/pages/api/auth/callback.ts");
+assert(
+  /supabase\.auth\.exchangeCodeForSession\s*\(\s*code\s*\)/.test(authCallbackApi),
+  "OAuth server callback must exchange the auth code for a session.",
 );
 
 const signupPage = read("apps/web/pages/signup.tsx");

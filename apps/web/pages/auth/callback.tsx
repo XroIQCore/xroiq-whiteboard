@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useSupabase } from "../../lib/SupabaseProvider";
 
 function safeNext(value: string | string[] | undefined) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
@@ -13,7 +12,6 @@ function firstString(value: string | string[] | undefined) {
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const supabase = useSupabase();
   const [message, setMessage] = useState("Signing you in...");
 
   useEffect(() => {
@@ -31,15 +29,11 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        setMessage(`Sign in could not finish: ${error.message}`);
-        return;
-      }
-
-      router.replace(safeNext(router.query.next));
+    router.replace({
+      pathname: "/api/auth/callback",
+      query: { code, next: safeNext(router.query.next) },
     });
-  }, [router, supabase]);
+  }, [router]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">

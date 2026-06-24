@@ -9,6 +9,7 @@ out/
 dist/
 coverage/
 .cache/
+*.tsbuildinfo
 repomix-output.xml
 xro_iq_whiteboard_technical_architecture.md
 
