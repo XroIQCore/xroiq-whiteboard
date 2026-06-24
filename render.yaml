@@ -3,7 +3,7 @@ services:
     name: xroiq-whiteboard-web
     env: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    buildCommand: npm install -g pnpm@11.5.3 && pnpm install --frozen-lockfile --prod=false && pnpm build
     startCommand: pnpm start
     envVars:
       - key: LLM_URL
@@ -23,7 +23,7 @@ services:
     name: xroiq-whiteboard-workers
     env: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm exec prisma generate
+    buildCommand: npm install -g pnpm@11.5.3 && pnpm install --frozen-lockfile --prod=false && pnpm exec prisma generate
     startCommand: pnpm run workers:core
     envVars:
       - key: LLM_URL
