@@ -28,7 +28,7 @@
     "worker:arc": "tsx workers/arc/index.ts",
     "worker:memory": "tsx workers/memory/index.ts",
     "worker:surfacer": "tsx workers/surfacer/index.ts",
-    "dev:workers": "concurrently -k \"pnpm worker --worker=ingestion\" \"pnpm worker --worker=dedupe\" \"pnpm worker --worker=classify\" \"pnpm worker --worker=memory\" \"pnpm worker --worker=surfacer\" \"pnpm worker --worker=signal\" \"pnpm worker --worker=moment\" \"pnpm worker --worker=thread\" \"pnpm worker --worker=priority\" \"pnpm worker --worker=arc\"",
+    "dev:workers": "powershell -ExecutionPolicy Bypass -File scripts/devWorkers.ps1",
     "prisma:migrate": "prisma migrate dev --name init"
   },
   "dependencies": {
