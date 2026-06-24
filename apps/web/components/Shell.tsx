@@ -45,7 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>
       {staleCount ? (
         <div className="fixed bottom-5 right-5 rounded-md border border-amber-400/40 bg-slate-900 px-4 py-3 text-sm text-amber-100 shadow-lg">
-          <span aria-hidden="true">{"\u23F0"}</span> {staleCount} stale items resurfaced
+          <span aria-hidden="true">{"\u23F0"}</span> {staleCount} items resurfaced
         </div>
       ) : null}
     </main>

@@ -138,6 +138,14 @@ model ReviewLog {
   @@index([userId])
 }
 
+model UserPref {
+  id        String   @id
+  prefs     Json     @default("{}")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_prefs")
+}
+
 model DuplicateGroup {
   id         String   @id @default(cuid())
   confidence Float

@@ -1,16 +1,4 @@
 services:
-  - type: pserv
-    name: llm
-    env: docker
-    dockerfilePath: ./llm.Dockerfile
-    plan: starter
-    autoDeploy: false
-    envVars:
-      - key: PORT
-        value: "8000"
-      - key: LLAMA_THREADS
-        value: "4"
-
   - type: web
     name: xroiq-whiteboard-web
     env: node
@@ -19,7 +7,7 @@ services:
     startCommand: pnpm start
     envVars:
       - key: LLM_URL
-        value: http://llm:8000
+        value: https://llm.xroiq-tunnel.trycloudflare.com
       - key: DATABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_URL
@@ -39,7 +27,7 @@ services:
     startCommand: pnpm dev:workers
     envVars:
       - key: LLM_URL
-        value: http://llm:8000
+        value: https://llm.xroiq-tunnel.trycloudflare.com
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL
