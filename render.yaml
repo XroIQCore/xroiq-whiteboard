@@ -24,7 +24,7 @@ services:
     env: node
     plan: free
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm exec prisma generate
-    startCommand: pnpm dev:workers
+    startCommand: pnpm run workers:core
     envVars:
       - key: LLM_URL
         value: https://llm.xroiq-tunnel.trycloudflare.com

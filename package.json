@@ -24,6 +24,7 @@
     "worker:arc": "tsx workers/arc/index.ts",
     "worker:memory": "tsx workers/memory/index.ts",
     "worker:surfacer": "tsx workers/surfacer/index.ts",
+    "workers:core": "concurrently -k -n ingestion,dedupe,classify,memory \"pnpm worker:ingestion\" \"pnpm worker:dedupe\" \"pnpm worker:classify\" \"pnpm worker:memory\"",
     "dev:workers": "powershell -ExecutionPolicy Bypass -File scripts/devWorkers.ps1",
     "prisma:migrate": "prisma migrate dev --name init"
   },
