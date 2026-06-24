@@ -1,11 +1,10 @@
 services:
-  - type: web
+  - type: pserv
     name: llm
     env: docker
     dockerfilePath: ./llm.Dockerfile
-    plan: free
+    plan: starter
     autoDeploy: false
-    healthCheckPath: /health
     envVars:
       - key: PORT
         value: "8000"
