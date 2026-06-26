@@ -2,7 +2,7 @@
   "name": "xroiq-whiteboard",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@11.5.3",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev apps/web -p 3000",
     "prebuild": "prisma generate",
