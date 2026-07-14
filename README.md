@@ -2,21 +2,20 @@
 
 Local-first private dashboard for turning uploaded files into extracted content, signals, candidate moments, review queue items, duplicate groups, and threaded moment clusters.
 
-The private build is intended to run on a trusted local machine with access to the folder or external drive that should hold XROIQ source files. Do not use the Render URL for private uploads. See [Local-First Reset](docs/LOCAL_FIRST_ARCHITECTURE.md).
+The private build is intended to run on a trusted local machine with access to the folder or external drive that should hold XROIQ source files. It does not use cloud hosting, cloud auth, or cloud storage. See [Local-First Reset](docs/LOCAL_FIRST_ARCHITECTURE.md).
 
 ## Run Sequence
 
-1. Copy `.env.local.example` to `.env.local` and fill in local paths and Supabase keys:
+1. Copy `.env.local.example` to `.env.local` and set the local database/file paths:
 
    ```powershell
    Copy-Item .env.local.example .env.local
    ```
 
-2. Start Supabase locally:
+2. Start local Postgres:
 
    ```powershell
-   pnpm supabase:start
-   pnpm supabase db reset     # drops & replays migrations
+   docker compose -f docker-compose.dev.yml up db
    ```
 
 3. Install dependencies:
@@ -59,14 +58,13 @@ The private build is intended to run on a trusted local machine with access to t
 
    From another device on the same network, use the host machine's local IP address, for example `http://192.168.1.25:3000/upload`.
 
-Original files are stored locally by default. Set `XROIQ_STORAGE_BACKEND=local` and point `XROIQ_FILES_DIR` at the drive/folder that should hold private documents, for example:
+Original files are stored locally. Point `XROIQ_FILES_DIR` at the drive/folder that should hold private documents, for example:
 
 ```powershell
-$env:XROIQ_STORAGE_BACKEND="local"
 $env:XROIQ_FILES_DIR="E:\XROIQ Whiteboard Files"
 ```
 
-The app refuses local-file storage on Render so private files are not quietly written to cloud instance disk. Supabase Storage is now opt-in only via `XROIQ_STORAGE_BACKEND=supabase`. Workers use `LLM_URL` for local Mistral inference; `OPENAI_API_KEY` is only a fallback for legacy moment and arc completion.
+Workers use `LLM_URL` for local Mistral inference; `OPENAI_API_KEY` is only a fallback for legacy moment and arc completion.
 
 ## Local LLM
 
@@ -90,29 +88,6 @@ docker compose -f docker-compose.dev.yml up llm
 ```powershell
 docker compose -f docker-compose.dev.yml up
 ```
-
-### Invite users
-
-1. In Supabase Dashboard -> Auth -> Users -> `Invite user`.
-2. Or CLI:
-
-   ```powershell
-   supabase auth invite --email jessicaleewatson@gmail.com
-   supabase auth invite --email karneyay007@gmail.com
-   ```
-
-Public sign-up is disabled. The whitelist migration allows `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`.
-Local public sign-up is disabled by `supabase/config.toml`; invite Jess and Karne manually before first use.
-
-### Google sign-in
-
-Enable Google in Supabase Auth and set `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` before starting local Supabase. The local Google redirect URI is:
-
-```text
-http://127.0.0.1:54321/auth/v1/callback
-```
-
-Invite `jessicaleewatson@gmail.com` and `karneyay007@gmail.com`; public sign-up stays disabled.
 
 ## Phase-4 workers
 

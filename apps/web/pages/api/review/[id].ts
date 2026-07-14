@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await prisma.reviewLog.create({
       data: {
         fileId: item.objectId,
-        userId: "authenticated",
+        userId: "local",
         action,
       },
     });

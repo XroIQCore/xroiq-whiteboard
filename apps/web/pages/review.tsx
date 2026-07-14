@@ -1,10 +1,7 @@
 import useSWR from "swr";
-import { useEffect } from "react";
 import { Shell } from "../components/Shell";
 import { Button } from "../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { subscribeToCounts } from "../lib/realtime";
-import { useSupabase } from "../lib/SupabaseProvider";
 
 type ReviewItem = {
   id: string;
@@ -18,12 +15,9 @@ type ReviewItem = {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ReviewPage() {
-  const supabase = useSupabase();
   const { data, mutate, error } = useSWR<ReviewItem[]>("/api/review", fetcher, {
-    refreshInterval: 0,
+    refreshInterval: 5000,
   });
-
-  useEffect(() => subscribeToCounts(supabase, () => mutate()), [mutate, supabase]);
 
   async function act(id: string, action: "approve" | "reject") {
     await fetch(`/api/review/${id}`, {

@@ -9,7 +9,7 @@ test("classifyText returns an enum category from the classify endpoint", async (
   })) as jest.Mock;
   const { classifyText } = await import("../llm");
 
-  const result = await classifyText("Prisma worker writes vectors to Supabase.");
+  const result = await classifyText("Prisma worker writes vectors to Postgres.");
 
   expect(categories.has(result.category)).toBe(true);
   expect(global.fetch).toHaveBeenCalledWith("http://llm:8000/classify", expect.any(Object));

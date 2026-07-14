@@ -2,7 +2,7 @@
 
 ## Private Local-First Direction
 
-The private whiteboard should run locally on a trusted machine and store private source files on a local drive. Render and Supabase Storage are not part of the private file workflow. See [Local-First Reset](docs/LOCAL_FIRST_ARCHITECTURE.md) for the architecture reset and migration plan.
+The private whiteboard runs locally on a trusted machine and stores private source files on a local drive. Cloud hosting, cloud auth, and cloud storage are not part of the private workflow. See [Local-First Reset](docs/LOCAL_FIRST_ARCHITECTURE.md) for the architecture reset and migration plan.
 
 ## Priority & Arc Logic
 

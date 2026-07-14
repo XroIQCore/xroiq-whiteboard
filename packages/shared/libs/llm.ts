@@ -97,7 +97,7 @@ export async function completeText(prompt: string, maxTokens = 256) {
 
 function fallbackCategory(text: string): ClassifyResult["category"] {
   const lower = text.toLowerCase();
-  if (/\b(next|react|tailwind|supabase|prisma|worker|api|typescript)\b/.test(lower)) return "framework";
+  if (/\b(next|react|tailwind|postgres|prisma|worker|api|typescript)\b/.test(lower)) return "framework";
   if (/\b(ui|ux|design|layout|brand|component)\b/.test(lower)) return "design";
   if (/\b(todo|task|fix|ship|review|implement)\b/.test(lower)) return "task";
   if (lower.trim().length < 20) return "junk";
@@ -107,7 +107,7 @@ function fallbackCategory(text: string): ClassifyResult["category"] {
 function fallbackSubBucket(category: ClassifyResult["category"], text: string) {
   const lower = text.toLowerCase();
   if (category === "framework" && /\b(next|react|tailwind)\b/.test(lower)) return "front-end";
-  if (category === "framework" && /\b(api|prisma|supabase|worker)\b/.test(lower)) return "back-end";
+  if (category === "framework" && /\b(api|prisma|postgres|worker)\b/.test(lower)) return "back-end";
   if (category === "design") return "interface";
   if (category === "task") return "implementation";
   return "general";

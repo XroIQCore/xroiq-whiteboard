@@ -1,42 +1,14 @@
-import { getSupabaseAdmin } from "./supabase";
-import { getWhiteboardCounts } from "./counts";
-
 export async function broadcastCounts() {
-  try {
-    const supabase = getSupabaseAdmin();
-    const payload = await getWhiteboardCounts();
-    await supabase.channel("whiteboard_counts").send({
-      type: "broadcast",
-      event: "counts",
-      payload,
-    });
-  } catch (error) {
-    console.warn("[realtime] counts broadcast skipped", error);
-  }
+  return;
 }
 
 export async function broadcastEvent(event: string, payload: Record<string, unknown>) {
-  try {
-    const supabase = getSupabaseAdmin();
-    await supabase.channel("whiteboard_counts").send({
-      type: "broadcast",
-      event,
-      payload,
-    });
-  } catch (error) {
-    console.warn(`[realtime] ${event} broadcast skipped`, error);
-  }
+  void event;
+  void payload;
 }
 
 export async function broadcastChannel(channelName: string, event: string, payload: Record<string, unknown>) {
-  try {
-    const supabase = getSupabaseAdmin();
-    await supabase.channel(channelName).send({
-      type: "broadcast",
-      event,
-      payload,
-    });
-  } catch (error) {
-    console.warn(`[realtime] ${channelName}:${event} broadcast skipped`, error);
-  }
+  void channelName;
+  void event;
+  void payload;
 }

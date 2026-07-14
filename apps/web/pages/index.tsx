@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Shell } from "../components/Shell";
 import { SearchPanel } from "../components/SearchPanel";
-import { subscribeToCounts, type WhiteboardCounts } from "../lib/realtime";
-import { useSupabase } from "../lib/SupabaseProvider";
+import type { WhiteboardCounts } from "../lib/whiteboardCounts";
 
 const cards: Array<{ key: keyof WhiteboardCounts; label: string }> = [
   { key: "filesNew", label: "Files New" },
@@ -15,25 +14,40 @@ const cards: Array<{ key: keyof WhiteboardCounts; label: string }> = [
 ];
 
 export default function Home() {
-  const supabase = useSupabase();
   const [data, setData] = useState<WhiteboardCounts | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/summary")
-      .then((res) => res.json())
-      .then(setData)
-      .catch(() => setError(true));
+    let active = true;
 
-    return subscribeToCounts(supabase, setData);
-  }, [supabase]);
+    async function refresh() {
+      try {
+        const res = await fetch("/api/summary");
+        if (!res.ok) throw new Error("Summary unavailable");
+        const nextData = (await res.json()) as WhiteboardCounts;
+        if (active) {
+          setData(nextData);
+          setError(false);
+        }
+      } catch {
+        if (active) setError(true);
+      }
+    }
+
+    refresh();
+    const timer = window.setInterval(refresh, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   return (
     <Shell>
       <header className="mb-8">
         <div>
           <h1 className="text-3xl font-semibold tracking-normal">XROIQ Whiteboard</h1>
-          <p className="mt-2 text-sm text-slate-400">Cloud-backed file intelligence pipeline.</p>
+          <p className="mt-2 text-sm text-slate-400">Local-first file intelligence pipeline.</p>
         </div>
       </header>
 
