@@ -26,42 +26,55 @@ function parseForm(req: NextApiRequest) {
   });
 }
 
+function uploadErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Upload failed";
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!requireMethods(req, res, ["POST"])) return;
 
-  const owner = "authenticated";
-  const uploaded = await parseForm(req);
-  if (!uploaded.length) {
-    return res.status(400).json({ error: "No files uploaded" });
-  }
+  try {
+    const owner = "authenticated";
+    const uploaded = await parseForm(req);
+    if (!uploaded.length) {
+      return res.status(400).json({ error: "No files uploaded" });
+    }
 
-  const rows = [];
-  for (const file of uploaded) {
-    const originalName = safeOriginalName(file.originalFilename || "upload");
-    const storagePath = `${owner}/${crypto.randomUUID()}_${originalName}`;
-    const buffer = await fs.promises.readFile(file.filepath);
-    await uploadFile(buffer, storagePath, "whiteboard-originals", file.mimetype || undefined);
-    const row = await prisma.file.create({
-      data: {
-        owner,
-        name: originalName,
-        type: file.mimetype || "application/octet-stream",
-        size: file.size,
-        hash: hashBuffer(buffer),
-        storagePath,
-        status: "new",
-      },
-    });
-    await writeAuditLog({
-      actor: owner,
-      event: "upload",
-      objectType: "File",
-      objectId: row.id,
-      payload: { name: originalName, storagePath },
-    });
-    rows.push(row);
-  }
+    const rows = [];
+    for (const file of uploaded) {
+      const originalName = safeOriginalName(file.originalFilename || "upload");
+      const storagePath = `${owner}/${crypto.randomUUID()}_${originalName}`;
+      const buffer = await fs.promises.readFile(file.filepath);
+      await uploadFile(buffer, storagePath, "whiteboard-originals", file.mimetype || undefined);
+      const row = await prisma.file.create({
+        data: {
+          owner,
+          name: originalName,
+          type: file.mimetype || "application/octet-stream",
+          size: file.size,
+          hash: hashBuffer(buffer),
+          storagePath,
+          status: "new",
+        },
+      });
+      await writeAuditLog({
+        actor: owner,
+        event: "upload",
+        objectType: "File",
+        objectId: row.id,
+        payload: { name: originalName, storagePath },
+      });
+      rows.push(row);
+    }
 
-  await broadcastCounts();
-  return res.status(200).json({ files: rows });
+    await broadcastCounts();
+    return res.status(200).json({ files: rows });
+  } catch (error) {
+    console.error("Upload failed", error);
+    return res.status(500).json({ error: uploadErrorMessage(error) });
+  }
 }

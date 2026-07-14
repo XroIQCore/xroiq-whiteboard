@@ -3,6 +3,16 @@ import { Shell } from "../components/Shell";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 
+async function responseJson(res: Response) {
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return (await res.json()) as { error?: string; files?: unknown[] };
+  }
+
+  const text = await res.text();
+  return { error: text || res.statusText };
+}
+
 export default function UploadPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,9 +31,9 @@ export default function UploadPage() {
     setBusy(true);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      const json = await res.json();
+      const json = await responseJson(res);
       if (!res.ok) throw new Error(json.error || "Upload failed");
-      setMessage(`Uploaded ${json.files.length} file(s). Workers will pick them up next.`);
+      setMessage(`Uploaded ${json.files?.length || 0} file(s). Workers will pick them up next.`);
       input.value = "";
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Upload failed");
