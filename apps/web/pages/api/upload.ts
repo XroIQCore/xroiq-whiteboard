@@ -2,6 +2,7 @@ import crypto from "crypto";
 import fs from "fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable, { File as FormidableFile } from "formidable";
+import { requireMethods } from "../../lib/api";
 import { prisma } from "../../../../packages/shared/libs/prisma";
 import { broadcastCounts } from "../../../../packages/shared/libs/broadcast";
 import { writeAuditLog } from "../../../../packages/shared/libs/audit";
@@ -26,10 +27,7 @@ function parseForm(req: NextApiRequest) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (!requireMethods(req, res, ["POST"])) return;
 
   const owner = "authenticated";
   const uploaded = await parseForm(req);

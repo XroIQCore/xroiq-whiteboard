@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { queryParam, requireMethods } from "../../../lib/api";
 import { prisma } from "../../../../../packages/shared/libs/prisma";
 import { writeAuditLog } from "../../../../../packages/shared/libs/audit";
 import { broadcastCounts, broadcastEvent } from "../../../../../packages/shared/libs/broadcast";
@@ -6,12 +7,9 @@ import { broadcastCounts, broadcastEvent } from "../../../../../packages/shared/
 const buckets = new Set(["immediate", "soon", "backlog", "archived"]);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "PATCH") {
-    res.setHeader("Allow", "PATCH");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (!requireMethods(req, res, ["PATCH"])) return;
 
-  const momentId = Array.isArray(req.query.momentId) ? req.query.momentId[0] : req.query.momentId;
+  const momentId = queryParam(req.query.momentId);
   const { bucket, rank } = req.body || {};
   if (!momentId || (bucket && !buckets.has(bucket))) {
     return res.status(400).json({ error: "Expected a valid momentId and bucket" });

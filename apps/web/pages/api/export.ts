@@ -1,15 +1,13 @@
 import crypto from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Parser } from "json2csv";
+import { requireMethods } from "../../lib/api";
 import { prisma } from "../../../../packages/shared/libs/prisma";
 import { exportsBucket, getSignedUrl, uploadFile } from "../../../../packages/shared/libs/storage";
 import { writeAuditLog } from "../../../../packages/shared/libs/audit";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (!requireMethods(req, res, ["POST"])) return;
 
   const { type, format = "json", bucket, owner } = req.body || {};
   if (!["moments", "arcs"].includes(type) || !["json", "csv"].includes(format)) {
