@@ -4,7 +4,7 @@ Production-intended dashboard for turning uploaded files into extracted content,
 
 ## Run Sequence
 
-1. Copy `.env.local.example` to `.env.local` and fill in Supabase keys:
+1. Copy `.env.local.example` to `.env.local` and fill in local paths and Supabase keys:
 
    ```powershell
    Copy-Item .env.local.example .env.local
@@ -49,7 +49,14 @@ Production-intended dashboard for turning uploaded files into extracted content,
    - Priority Board: http://localhost:3000/priority
    - Arc Explorer: http://localhost:3000/arcs
 
-Original files are stored in Supabase Storage bucket `whiteboard-originals`; extracted text is stored in `whiteboard-extracted-text`. Workers use `LLM_URL` for local Mistral inference; `OPENAI_API_KEY` is only a fallback for legacy moment and arc completion.
+Original files are stored locally by default. Set `XROIQ_STORAGE_BACKEND=local` and point `XROIQ_FILES_DIR` at the drive/folder that should hold private documents, for example:
+
+```powershell
+$env:XROIQ_STORAGE_BACKEND="local"
+$env:XROIQ_FILES_DIR="E:\XROIQ Whiteboard Files"
+```
+
+The app refuses local-file storage on Render so private files are not quietly written to cloud instance disk. Supabase Storage is now opt-in only via `XROIQ_STORAGE_BACKEND=supabase`. Workers use `LLM_URL` for local Mistral inference; `OPENAI_API_KEY` is only a fallback for legacy moment and arc completion.
 
 ## Local LLM
 

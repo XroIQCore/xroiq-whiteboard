@@ -47,7 +47,7 @@ export default function UploadPage() {
       <header className="mb-8">
         <div>
           <h1 className="text-3xl font-semibold">Upload</h1>
-          <p className="mt-2 text-sm text-slate-400">Add source files to Supabase Storage and the extraction queue.</p>
+          <p className="mt-2 text-sm text-slate-400">Add source files to your local whiteboard storage and the extraction queue.</p>
         </div>
       </header>
 
