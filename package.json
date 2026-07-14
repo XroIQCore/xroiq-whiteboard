@@ -5,11 +5,13 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev apps/web -p 3000",
+    "dev:lan": "next dev apps/web -H 0.0.0.0 -p 3000",
     "prebuild": "prisma generate",
     "build": "next build apps/web",
     "test": "jest --runInBand",
     "check:auth": "node scripts/assert-invite-only-auth.js",
     "start": "next start apps/web -p 3000",
+    "start:lan": "next start apps/web -H 0.0.0.0 -p 3000",
     "supabase:start": "supabase start",
     "worker": "tsx workers/$npm_config_worker/index.ts",
     "worker:*": "tsx workers/$npm_config_worker/index.ts",

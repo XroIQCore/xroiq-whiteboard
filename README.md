@@ -1,6 +1,8 @@
 # XROIQ Whiteboard
 
-Production-intended dashboard for turning uploaded files into extracted content, signals, candidate moments, review queue items, duplicate groups, and threaded moment clusters.
+Local-first private dashboard for turning uploaded files into extracted content, signals, candidate moments, review queue items, duplicate groups, and threaded moment clusters.
+
+The private build is intended to run on a trusted local machine with access to the folder or external drive that should hold XROIQ source files. Do not use the Render URL for private uploads. See [Local-First Reset](docs/LOCAL_FIRST_ARCHITECTURE.md).
 
 ## Run Sequence
 
@@ -35,6 +37,12 @@ Production-intended dashboard for turning uploaded files into extracted content,
    pnpm dev
    ```
 
+   To make the app reachable from a phone or another PC on the same private network, run:
+
+   ```powershell
+   pnpm dev:lan
+   ```
+
 6. In a second terminal, start the workers:
 
    ```powershell
@@ -48,6 +56,8 @@ Production-intended dashboard for turning uploaded files into extracted content,
    - Review: http://localhost:3000/review
    - Priority Board: http://localhost:3000/priority
    - Arc Explorer: http://localhost:3000/arcs
+
+   From another device on the same network, use the host machine's local IP address, for example `http://192.168.1.25:3000/upload`.
 
 Original files are stored locally by default. Set `XROIQ_STORAGE_BACKEND=local` and point `XROIQ_FILES_DIR` at the drive/folder that should hold private documents, for example:
 
