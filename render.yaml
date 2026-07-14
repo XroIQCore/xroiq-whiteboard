@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: xroiq-whiteboard-web
+    name: xroiq-whiteboard
     env: node
     plan: free
     buildCommand: npm install -g pnpm@11.5.3 && pnpm install --frozen-lockfile --prod=false && pnpm build
