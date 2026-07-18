@@ -1,12 +1,13 @@
 import crypto from "crypto";
 import fs from "fs";
 import type { NextApiRequest, NextApiResponse } from "next";
+import path from "path";
 import formidable, { File as FormidableFile } from "formidable";
 import { requireMethods } from "../../lib/api";
 import { prisma } from "../../../../packages/shared/libs/prisma";
 import { broadcastCounts } from "../../../../packages/shared/libs/broadcast";
 import { writeAuditLog } from "../../../../packages/shared/libs/audit";
-import { hashBuffer, safeOriginalName, uploadFile } from "../../../../packages/shared/libs/storage";
+import { ensureFilesDir, filesDir, hashBuffer, safeOriginalName, uploadFile } from "../../../../packages/shared/libs/storage";
 
 export const config = {
   api: {
@@ -14,8 +15,12 @@ export const config = {
   },
 };
 
-function parseForm(req: NextApiRequest) {
-  const form = formidable({ multiples: true, keepExtensions: true });
+async function parseForm(req: NextApiRequest) {
+  await ensureFilesDir();
+  const uploadDir = path.join(filesDir, ".tmp", "uploads");
+  await fs.promises.mkdir(uploadDir, { recursive: true });
+
+  const form = formidable({ multiples: true, keepExtensions: true, uploadDir });
   return new Promise<FormidableFile[]>((resolve, reject) => {
     form.parse(req, (error, _fields, files) => {
       if (error) return reject(error);

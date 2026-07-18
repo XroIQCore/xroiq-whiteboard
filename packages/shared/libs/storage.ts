@@ -8,7 +8,21 @@ export const extractedTextBucket = "whiteboard-extracted-text";
 export const exportsBucket = "whiteboard-exports";
 
 export async function ensureFilesDir() {
-  await fs.promises.mkdir(filesDir, { recursive: true });
+  try {
+    await fs.promises.mkdir(filesDir, { recursive: true });
+  } catch (error) {
+    throw localFilesDirError(error);
+  }
+}
+
+function localFilesDirError(error: unknown) {
+  if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+    return new Error(
+      `Local files directory is not available: ${filesDir}. Connect the drive or update XROIQ_FILES_DIR.`,
+    );
+  }
+
+  return error;
 }
 
 function localPathFor(storagePath: string, bucket: string) {
@@ -41,7 +55,11 @@ export function hashBuffer(buffer: Buffer) {
 export async function uploadFile(buffer: Buffer, storagePath: string, bucket = originalsBucket, contentType?: string) {
   void contentType;
   const destination = localPathFor(storagePath, bucket);
-  await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+  try {
+    await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+  } catch (error) {
+    throw localFilesDirError(error);
+  }
   await fs.promises.writeFile(destination, buffer);
   return storagePath;
 }
